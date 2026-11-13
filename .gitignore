@@ -1,0 +1,22 @@
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# local data (pglite database + uploaded images)
+.data/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# build / test
+coverage/
+*.tsbuildinfo
+
+# vercel
+.vercel/
+
+# dev server log
+.dev.log
