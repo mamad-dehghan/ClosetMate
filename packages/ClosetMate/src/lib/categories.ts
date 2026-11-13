@@ -45,6 +45,11 @@ export const SEASONS = [
   { value: "winter", label: "Winter" },
 ] as const;
 
+export const SEASON_VALUES = SEASONS.map((season) => season.value) as [
+  string,
+  ...string[],
+];
+
 export const OCCASIONS = [
   { value: "casual", label: "Casual" },
   { value: "work", label: "Work" },
@@ -53,6 +58,11 @@ export const OCCASIONS = [
   { value: "travel", label: "Travel" },
   { value: "evening", label: "Evening" },
 ] as const;
+
+export const OCCASION_VALUES = OCCASIONS.map((occasion) => occasion.value) as [
+  string,
+  ...string[],
+];
 
 export const PATTERNS = [
   "solid",

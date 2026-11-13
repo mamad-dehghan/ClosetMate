@@ -6,9 +6,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { DeleteItemButton } from "@/components/wardrobe/delete-item-button";
 import { GarmentImage } from "@/components/wardrobe/garment-image";
 import { getItem, listItems } from "@/db/queries/items";
+import { itemWearStats } from "@/db/queries/outfits";
 import { requireActor } from "@/lib/actor";
 import { categoryMeta, colorName, LAUNDRY_STATUSES } from "@/lib/categories";
 import { rankByHarmony } from "@/lib/color";
+import { formatShortDate } from "@/lib/outfits";
 import { countsFromItems, versatilityFor } from "@/lib/versatility";
 import { formatPrice } from "@/lib/utils";
 
@@ -28,6 +30,7 @@ export default async function ItemDetailPage({
 
   const all = await listItems(actor.userId);
   const counts = countsFromItems(all);
+  const wear = await itemWearStats(actor.userId, item.id);
   const versatility = versatilityFor(
     { category: item.category as never },
     counts,
@@ -147,6 +150,16 @@ export default async function ItemDetailPage({
             </div>
             <p className="mt-3 text-sm font-medium">{versatility.label}</p>
             <p className="mt-1 text-sm text-muted">{versatility.detail}</p>
+            <div className="mt-3 flex items-center justify-between border-t border-line/70 pt-3 text-xs text-muted">
+              <span>
+                Worn {wear.wears} time{wear.wears === 1 ? "" : "s"}
+              </span>
+              <span>
+                {wear.lastWorn
+                  ? `Last ${formatShortDate(wear.lastWorn)}`
+                  : "Never worn"}
+              </span>
+            </div>
           </section>
 
           {/* Details */}

@@ -10,9 +10,11 @@ Legend: `[x]` shipped · `[ ]` planned · `[~]` partial / schema only
 
 ## 1. Where the project is
 
-**Pass 1 (core vertical slice) is complete and running.**
+**Pass 1 (core vertical slice) and the core of Pass 2 are complete and running.**
 
-The product promise — "better outfits from the clothes you already own" — is already deliverable: a visitor lands, opens a guest closet, adds or edits real items, and immediately sees colour pairings, a versatility score and a daily suggestion.
+The product promise — "better outfits from the clothes you already own" — is already
+deliverable: a visitor lands, opens a guest closet, adds or edits real items, builds
+outfits, plans them on a calendar and records when they were worn.
 
 ### Pass 1 checklist
 
@@ -57,7 +59,7 @@ The product promise — "better outfits from the clothes you already own" — is
 - [x] Sign out
 
 **Quality**
-- [x] 25 unit tests covering colour math, versatility, hex parsing and form validation
+- [x] 49 tests covering colour math, versatility, form validation, calendar helpers and outfit persistence (real PGlite integration)
 - [x] `tsc --noEmit` clean, production build passes
 - [x] Guest claim verified end to end (12 items moved, guest row removed)
 - [x] README with setup, env, structure and deployment
@@ -66,55 +68,50 @@ The product promise — "better outfits from the clothes you already own" — is
 
 | Item | Why |
 | --- | --- |
-| Outfit studio UI | Schema exists; building it needs a different interaction model (picker, reorder, save). Worth its own pass. |
-| Calendar & wear history | Depends on saved outfits. |
-| Insights dashboard | Needs wear data to be meaningful. |
+| Weather-aware suggestions | Needs a location permission flow and a provider decision; deferred to keep pass 2 shippable. |
+| Reject/remix on the daily suggestion | Feedback needs a place to go (remix algorithm is pass 3) — next pass. |
+| Insights dashboard | Needs a few weeks of wear data to be meaningful. |
 | AI recognition / background removal | Paid vision API, moderation, and it solves a problem that quick add already softens. |
 | PWA / offline | Value arrives with repeat usage; not needed to prove the loop. |
 | i18n | English-only for the portfolio cut. |
 
 ---
 
-## 2. Pass 2 — daily usefulness (next)
+## 2. Pass 2 — daily usefulness (shipped)
 
 Goal: ClosetMate becomes something you open on a weekday morning.
 
-### 2.1 Outfit studio
-- [ ] `/app/outfits/studio`: category-grouped picker, live preview, drag-free reorder
-- [ ] Save outfit with name, occasion, season, favourite
-- [ ] `/app/outfits` list with cover collage derived from items
-- [ ] `/app/outfits/[id]`: view, edit, delete, "wear today"
-- [ ] Duplicate an outfit as a starting point
-- [ ] Harmony score for the whole outfit (`harmonyForColors` already exists)
+### 2.1 Outfit studio — done
+- [x] `/app/outfits/studio`: category-grouped picker, selected tray, live harmony score
+- [x] Save outfit with name (auto-named from occasion), description, occasion, season, favourite
+- [x] `/app/outfits` list with cover collages, occasion/favourite filters, wear counts
+- [x] `/app/outfits/[id]`: view, harmony, edit, delete, favourite, mark worn, plan a date
+- [x] `/app/outfits/[id]/edit` reuses the studio with existing pieces selected
+- [x] Ownership enforced on outfit, piece and plan ids in every action
 
-Schema: no migration needed (`outfits`, `outfit_items`).
+### 2.2 Wear history — done
+- [x] `outfit_wears` written by "Mark worn" (idempotent per outfit + date)
+- [x] Times worn and last worn on the outfit detail
+- [x] Per-item wear count and last worn on item detail (derived through outfit links)
+- [x] Worn-this-month counter on `/today`
+- [ ] "Not worn recently" filter on the wardrobe (next)
 
-### 2.2 Wear history
-- [ ] `outfit_wears` write path when an outfit is marked worn
-- [ ] Last worn date on outfit and item detail
-- [ ] "Not worn recently" filter on the wardrobe
-- [ ] Simple stats: wears this month, most-worn piece, neglected pieces
+### 2.3 Calendar — done
+- [x] `/app/calendar`: six-week month grid, Monday first, month navigation
+- [x] Assign an outfit to a date; one plan per day, replacing the previous
+- [x] Remove a plan from the day panel
+- [x] Upcoming plan replaces the suggestion on `/today`
+- [x] Seeded demo data: four outfits, one wear, one plan for today
 
-### 2.3 Calendar
-- [ ] `/app/calendar`: month grid, assign an outfit to a date (`outfit_plans`)
-- [ ] Upcoming plan card on `/today`, replacing the suggestion when a plan exists
-- [ ] Optional "plan what I wore yesterday" shortcut
+### 2.4 Today upgrade — partial
+- [x] Planned outfit card with pieces and a "Mark worn" action
+- [x] Deterministic suggestion shown as an alternative when a plan exists
+- [ ] Reject / remix actions persisted as feedback
 
-### 2.4 Today upgrade
-- [ ] Reject / remix actions on the suggestion, persisted as lightweight feedback
-- [ ] Weather-aware filtering (see 2.5) applied before scoring
-- [ ] Empty/limited-wardrobe guidance that names the missing category
-
-### 2.5 Weather
-- [ ] Server-side weather fetch (Open-Meteo, no key) with cached lat/lon preference
+### 2.5 Weather — not started
+- [ ] Server-side weather fetch (Open-Meteo, no key) with a cached location preference
 - [ ] Map temperature band → season filter before suggesting
 - [ ] Graceful degradation when location is unavailable
-
-**Acceptance for pass 2**
-
-- A user can save an outfit, plan it for tomorrow, and see it on `/today`.
-- Marking an outfit worn updates item-level "last worn".
-- No new table is readable across users.
 
 ---
 

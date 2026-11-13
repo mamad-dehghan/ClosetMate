@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { CATEGORY_VALUES, OCCASIONS, SEASONS } from "./categories";
+import {
+  CATEGORY_VALUES,
+  OCCASION_VALUES,
+  OCCASIONS,
+  SEASON_VALUES,
+  SEASONS,
+} from "./categories";
 
 const hex = z
   .string()
@@ -48,6 +54,43 @@ export const itemInputSchema = z.object({
 });
 
 export type ItemInput = z.infer<typeof itemInputSchema>;
+
+const isoDateString = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date");
+
+export const outfitInputSchema = z.object({
+  name: z.string().trim().max(80).default(""),
+  description: optionalText(400),
+  occasion: z
+    .enum(OCCASION_VALUES)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  season: z
+    .enum(SEASON_VALUES)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  favorite: z.boolean().optional().default(false),
+  itemIds: z
+    .array(z.string().trim().min(1))
+    .min(1, "Pick at least one piece")
+    .max(12, "An outfit of twelve pieces is plenty"),
+});
+
+export type OutfitInput = z.infer<typeof outfitInputSchema>;
+
+export const outfitPlanSchema = z.object({
+  outfitId: z.string().trim().min(1),
+  plannedFor: isoDateString,
+  note: optionalText(200),
+});
+
+export const outfitWearSchema = z.object({
+  outfitId: z.string().trim().min(1),
+  wornOn: isoDateString,
+  note: optionalText(200),
+});
 
 export const itemFiltersSchema = z.object({
   q: z.string().trim().optional(),
