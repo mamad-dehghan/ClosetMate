@@ -22,8 +22,11 @@ This is the first vertical slice. It runs end to end today.
 | Quick add with photo upload, compression, auto color detection | Working |
 | Item detail with colour harmony + versatility score | Working |
 | Today dashboard with a deterministic outfit suggestion | Working |
+| Outfit studio (create, edit, delete, favourite) | Working |
+| Wear history and "mark as worn" | Working |
+| Outfit calendar with day planning | Working |
 | Profile, preferences, JSON export, account deletion | Working |
-| Outfit studio, calendar, wear history | Schema ready, UI next |
+| Weather-aware suggestions | Planned |
 
 See [PLAN.md](./PLAN.md) for the full shipped / next breakdown.
 
@@ -165,9 +168,10 @@ src/
 │  ├─ (marketing)/          landing page and /demo (public)
 │  ├─ (auth)/               /login and /register
 │  ├─ app/                  the signed-in / guest application
-│  │  ├─ today/             dashboard + daily suggestion
+│  │  ├─ today/             dashboard, planned outfit, daily suggestion
 │  │  ├─ wardrobe/          grid, new, [id], [id]/edit
-│  │  ├─ outfits/           studio placeholder (schema ready)
+│  │  ├─ outfits/           list, studio, [id], [id]/edit
+│  │  ├─ calendar/          month grid and day planning
 │  │  └─ profile/           preferences, export, deletion
 │  └─ api/                  auth, guest, upload, files, export
 ├─ components/              ui/, wardrobe/, layout/, brand/, auth/

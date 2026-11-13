@@ -63,7 +63,7 @@ PGlite refuses to start if its directory is missing — the client creates it wi
 | `/` | `src/app/(marketing)/page.tsx` |
 | `/demo` | `src/app/(marketing)/demo/page.tsx` |
 | `/login`, `/register` | `src/app/(auth)/...` |
-| `/app/today`, `/app/wardrobe`, `/app/outfits`, `/app/profile` | `src/app/app/...` |
+| `/app/today`, `/app/wardrobe`, `/app/outfits`, `/app/calendar`, `/app/profile` | `src/app/app/...` |
 
 `src/app/app/` is a real `app` URL segment, **not** a route group. The public and auth
 sections use `(marketing)` / `(auth)` groups. Do not rename `src/app/app` to `(app)` —
@@ -76,6 +76,19 @@ checks whether a session cookie exists. If none exists it redirects to
 `/api/guest?next=<path>`, which creates an anonymous user, sets the signed `cm_guest`
 cookie, and sends the visitor back. Real validation and DB lookups happen in
 `src/app/app/layout.tsx` via `getActor()`. Never import the database into `proxy.ts`.
+
+## Outfits and wear history
+
+- Outfit mutations live in `src/lib/actions/outfits.ts`; queries in `src/db/queries/outfits.ts`.
+- Saving an outfit replaces all `outfit_items` rows inside a transaction, preserving the
+  user's selection order via `position`.
+- "Mark worn" writes one `outfit_wears` row per outfit per date (checked before insert).
+- A day has at most one `outfit_plans` row: `planOutfitAction` deletes the day's plan and
+  inserts the new one in a transaction.
+- Item wear stats are derived by joining `outfit_wears` → `outfit_items`; there is no
+  `items.last_worn` column.
+- Seeded guest/demo closets include four outfits, one wear and one plan for today
+  (`seedOutfits` in `src/lib/seed.ts`).
 
 ## Gotchas
 

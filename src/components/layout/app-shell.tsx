@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Layers, Plus, Shirt, Sun, User } from "lucide-react";
+import { CalendarDays, Layers, Plus, Shirt, Sun, User } from "lucide-react";
 import { Brand } from "@/components/brand/brand";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/app/today", label: "Today", icon: Sun },
   { href: "/app/wardrobe", label: "Wardrobe", icon: Shirt },
   { href: "/app/outfits", label: "Outfits", icon: Layers },
+  { href: "/app/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/app/profile", label: "Profile", icon: User },
 ];
 
@@ -118,7 +119,7 @@ export function AppShell({
 
       {/* Mobile bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-canvas/95 backdrop-blur safe-bottom md:hidden">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {NAV.map((item) => {
             const active = isActive(pathname, item.href);
             return (
@@ -126,7 +127,7 @@ export function AppShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] transition-colors",
+                  "flex min-h-16 flex-col items-center justify-center gap-1 text-[10px] transition-colors",
                   active ? "text-ink" : "text-muted",
                 )}
               >

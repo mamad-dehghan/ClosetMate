@@ -1,7 +1,9 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  CalendarDays,
   Camera,
+  Check,
   Layers,
   Plus,
   Shirt,
@@ -14,8 +16,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { GarmentImage } from "@/components/wardrobe/garment-image";
 import { ItemCard } from "@/components/wardrobe/item-card";
 import { countItems, favoriteItems, listItems, recentItems } from "@/db/queries/items";
-import { getActor, requireActor } from "@/lib/actor";
-import { categoryMeta } from "@/lib/categories";
+import { planForDate, wearsThisMonth } from "@/db/queries/outfits";
+import { requireActor } from "@/lib/actor";
+import { markOutfitWornAction } from "@/lib/actions/outfits";
+import { categoryMeta, OCCASIONS } from "@/lib/categories";
+import { todayISO } from "@/lib/outfits";
 import { countsFromItems, outfitCapacity } from "@/lib/versatility";
 import { suggestOutfit } from "@/lib/suggest";
 
@@ -23,12 +28,18 @@ export const metadata = { title: "Today" };
 
 export default async function TodayPage() {
   const actor = await requireActor();
-  const [all, { counts, total }, recent, favorites] = await Promise.all([
-    listItems(actor.userId),
-    countItems(actor.userId),
-    recentItems(actor.userId, 6),
-    favoriteItems(actor.userId, 4),
-  ]);
+  const iso = todayISO();
+  const month = iso.slice(0, 7);
+
+  const [all, { counts, total }, recent, favorites, plan, wornThisMonth] =
+    await Promise.all([
+      listItems(actor.userId),
+      countItems(actor.userId),
+      recentItems(actor.userId, 6),
+      favoriteItems(actor.userId, 4),
+      planForDate(actor.userId, iso),
+      wearsThisMonth(actor.userId, month),
+    ]);
 
   const suggestion = suggestOutfit(all);
   const capacity = outfitCapacity(countsFromItems(all));
@@ -52,13 +63,74 @@ export default async function TodayPage() {
         </p>
       </header>
 
+      {/* Planned outfit */}
+      {plan ? (
+        <section className="overflow-hidden rounded-card border border-sage/30 bg-surface shadow-card">
+          <div className="flex items-center justify-between gap-3 border-b border-line/70 px-5 py-3">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="size-4 text-sage" />
+              <h2 className="text-sm font-semibold">Planned for today</h2>
+            </div>
+            {plan.occasion ? (
+              <Badge tone="sage">
+                {OCCASIONS.find((entry) => entry.value === plan.occasion)?.label ??
+                  plan.occasion}
+              </Badge>
+            ) : (
+              <Badge tone="sage">
+                {plan.pieces.length} piece{plan.pieces.length === 1 ? "" : "s"}
+              </Badge>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-2 p-3 sm:grid-cols-4 sm:gap-3">
+            {plan.pieces.slice(0, 4).map((piece) => (
+              <Link
+                key={piece.id}
+                href={`/app/wardrobe/${piece.id}`}
+                className="group"
+              >
+                <GarmentImage
+                  src={piece.imageUrl}
+                  alt={piece.name}
+                  imgClassName="object-cover transition-transform group-hover:scale-[1.02]"
+                />
+                <p className="mt-1.5 truncate text-xs text-muted">
+                  {categoryMeta(piece.category).singular}
+                </p>
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-line/70 px-5 py-3">
+            <Link
+              href={`/app/outfits/${plan.outfit.id}`}
+              className="min-w-0 truncate text-sm font-medium hover:underline"
+            >
+              {plan.outfit.name}
+            </Link>
+            <form action={markOutfitWornAction} className="shrink-0">
+              <input type="hidden" name="outfitId" value={plan.outfit.id} />
+              <input type="hidden" name="wornOn" value={iso} />
+              <button
+                type="submit"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                <Check className="size-4" />
+                Mark worn
+              </button>
+            </form>
+          </div>
+        </section>
+      ) : null}
+
       {/* Suggestion */}
       {suggestion ? (
         <section className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
           <div className="flex items-center justify-between gap-3 border-b border-line/70 px-5 py-3">
             <div className="flex items-center gap-2">
               <Sparkles className="size-4 text-accent" />
-              <h2 className="text-sm font-semibold">An idea for today</h2>
+              <h2 className="text-sm font-semibold">
+                {plan ? "Or something else" : "An idea for today"}
+              </h2>
             </div>
             <Badge tone="accent">{suggestion.score} · {suggestion.label}</Badge>
           </div>
@@ -114,10 +186,11 @@ export default async function TodayPage() {
       )}
 
       {/* Stats */}
-      <section className="grid grid-cols-3 gap-2 sm:gap-3">
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         {[
           { label: "Pieces", value: total, icon: Shirt, href: "/app/wardrobe" },
           { label: "Outfits possible", value: capacity, icon: TrendingUp, href: "/app/wardrobe" },
+          { label: "Worn this month", value: wornThisMonth, icon: Check, href: "/app/calendar" },
           { label: "Favourites", value: favorites.length, icon: Star, href: "/app/wardrobe?favorite=1" },
         ].map((stat) => (
           <Link
@@ -139,7 +212,7 @@ export default async function TodayPage() {
         <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted">
           Do something
         </h2>
-        <div className="mt-3 grid gap-2 sm:grid-cols-3 sm:gap-3">
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 sm:gap-3">
           <Link
             href="/app/wardrobe/new"
             className="flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3.5 shadow-card transition-colors hover:border-ink/20"
@@ -162,17 +235,23 @@ export default async function TodayPage() {
           </Link>
           <Link
             href="/app/outfits"
-            className="flex items-center gap-3 rounded-card border border-dashed border-line bg-surface/60 px-4 py-3.5"
+            className="flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3.5 shadow-card transition-colors hover:border-ink/20"
           >
-            <span className="flex size-9 items-center justify-center rounded-xl bg-surface-2 text-muted">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
               <Layers className="size-4" />
             </span>
-            <span className="text-sm font-medium text-muted">
-              Outfit studio
+            <span className="text-sm font-medium">Build an outfit</span>
+            <ArrowRight className="ml-auto size-4 text-muted" />
+          </Link>
+          <Link
+            href="/app/calendar"
+            className="flex items-center gap-3 rounded-card border border-line bg-surface px-4 py-3.5 shadow-card transition-colors hover:border-ink/20"
+          >
+            <span className="flex size-9 items-center justify-center rounded-xl bg-sage-soft text-sage">
+              <CalendarDays className="size-4" />
             </span>
-            <Badge tone="outline" className="ml-auto">
-              Next
-            </Badge>
+            <span className="text-sm font-medium">Plan the week</span>
+            <ArrowRight className="ml-auto size-4 text-muted" />
           </Link>
         </div>
       </section>
