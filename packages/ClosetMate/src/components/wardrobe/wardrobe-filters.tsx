@@ -51,7 +51,7 @@ export function WardrobeFilters({
   }, [query]);
 
   const activeCategory = params.get("category") ?? "";
-  const hasFilters = ["q", "category", "season", "occasion", "favorite"].some(
+  const hasFilters = ["q", "category", "season", "occasion", "favorite", "worn"].some(
     (key) => params.get(key),
   );
 
@@ -155,6 +155,20 @@ export function WardrobeFilters({
           )}
         >
           Favourites
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            update("worn", params.get("worn") === "stale" ? "" : "stale")
+          }
+          className={cn(
+            "min-h-9 rounded-pill border px-3.5 text-xs transition-colors",
+            params.get("worn") === "stale"
+              ? "border-sage/40 bg-sage-soft text-sage"
+              : "border-line bg-surface text-muted hover:text-ink",
+          )}
+        >
+          Not worn in 30 days
         </button>
         {hasFilters ? (
           <button

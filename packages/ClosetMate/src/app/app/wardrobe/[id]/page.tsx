@@ -31,6 +31,11 @@ export default async function ItemDetailPage({
   const all = await listItems(actor.userId);
   const counts = countsFromItems(all);
   const wear = await itemWearStats(actor.userId, item.id);
+  const price = Number(item.purchasePrice ?? 0);
+  const costPerWear =
+    Number.isFinite(price) && price > 0 && wear.wears > 0
+      ? price / wear.wears
+      : null;
   const versatility = versatilityFor(
     { category: item.category as never },
     counts,
@@ -53,6 +58,7 @@ export default async function ItemDetailPage({
     ["Pattern", item.pattern],
     ["Subcategory", item.subcategory],
     ["Price", formatPrice(item.purchasePrice, item.currency)],
+    ["Cost per wear", costPerWear ? formatPrice(costPerWear, item.currency) : null],
     ["Care status", laundry?.label ?? null],
     [
       "Seasons",

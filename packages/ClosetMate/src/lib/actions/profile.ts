@@ -12,6 +12,69 @@ import { GUEST_COOKIE } from "@/lib/guest";
 
 export type PreferencesState = { error?: string; saved?: boolean };
 
+export type LocationState = { ok: boolean; error?: string };
+
+function validCoords(latitude: number, longitude: number) {
+  return (
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180
+  );
+}
+
+export async function saveLocationAction(
+  latitude: number,
+  longitude: number,
+  label?: string,
+): Promise<LocationState> {
+  const actor = await requireActor();
+
+  if (!validCoords(latitude, longitude)) {
+    return { ok: false, error: "Those coordinates look wrong." };
+  }
+
+  const locationLabel = (label ?? "").trim().slice(0, 60) || null;
+
+  await db
+    .insert(preferences)
+    .values({
+      userId: actor.userId,
+      latitude,
+      longitude,
+      locationLabel,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: preferences.userId,
+      set: { latitude, longitude, locationLabel, updatedAt: new Date() },
+    });
+
+  revalidatePath("/app/today");
+  revalidatePath("/app/profile");
+  return { ok: true };
+}
+
+export async function clearLocationAction(): Promise<LocationState> {
+  const actor = await requireActor();
+
+  await db
+    .update(preferences)
+    .set({
+      latitude: null,
+      longitude: null,
+      locationLabel: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(preferences.userId, actor.userId));
+
+  revalidatePath("/app/today");
+  revalidatePath("/app/profile");
+  return { ok: true };
+}
+
 export async function updatePreferencesAction(
   _prev: PreferencesState,
   formData: FormData,

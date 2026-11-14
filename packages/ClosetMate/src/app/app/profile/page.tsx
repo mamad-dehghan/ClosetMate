@@ -7,6 +7,7 @@ import {
   DeleteAccountForm,
   PreferencesForm,
 } from "@/components/profile/preferences-form";
+import { LocationCard } from "@/components/profile/location-card";
 import { db } from "@/db/client";
 import { countItems } from "@/db/queries/items";
 import { eq } from "drizzle-orm";
@@ -88,6 +89,25 @@ export default async function ProfilePage() {
             theme={prefs?.theme ?? "system"}
           />
         </div>
+      </section>
+
+      <LocationCard
+        label={prefs?.locationLabel ?? null}
+        latitude={prefs?.latitude ?? null}
+        longitude={prefs?.longitude ?? null}
+      />
+
+      <section className="rounded-card border border-line bg-surface p-5 shadow-card">
+        <h2 className="text-sm font-semibold">Wardrobe insights</h2>
+        <p className="mt-1 text-sm text-muted">
+          Coverage, gaps, cost per wear and the pieces you never reach for.
+        </p>
+        <Link
+          href="/app/insights"
+          className={`${buttonVariants({ variant: "outline", size: "sm" })} mt-4`}
+        >
+          Open insights
+        </Link>
       </section>
 
       <section className="rounded-card border border-line bg-surface p-5 shadow-card">

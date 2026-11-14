@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Check,
   Pencil,
+  Shuffle,
   Sparkles,
   Star,
 } from "lucide-react";
@@ -79,6 +80,13 @@ export default async function OutfitDetailPage({
               />
             </button>
           </form>
+          <Link
+            href={`/app/outfits/${outfit.id}/remix`}
+            className={buttonVariants({ variant: "soft", size: "sm" })}
+          >
+            <Shuffle className="size-4" />
+            Remix
+          </Link>
           <Link
             href={`/app/outfits/${outfit.id}/edit`}
             className={buttonVariants({ variant: "outline", size: "sm" })}
