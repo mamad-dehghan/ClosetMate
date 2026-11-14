@@ -99,6 +99,7 @@ export const itemFiltersSchema = z.object({
   occasion: z.string().trim().optional(),
   color: z.string().trim().optional(),
   favorite: z.enum(["1", "0"]).optional(),
+  worn: z.enum(["stale"]).optional(),
   sort: z.enum(["recent", "name", "color"]).optional(),
 });
 

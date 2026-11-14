@@ -63,7 +63,7 @@ PGlite refuses to start if its directory is missing — the client creates it wi
 | `/` | `src/app/(marketing)/page.tsx` |
 | `/demo` | `src/app/(marketing)/demo/page.tsx` |
 | `/login`, `/register` | `src/app/(auth)/...` |
-| `/app/today`, `/app/wardrobe`, `/app/outfits`, `/app/calendar`, `/app/profile` | `src/app/app/...` |
+| `/app/today`, `/app/wardrobe`, `/app/outfits`, `/app/calendar`, `/app/insights`, `/app/profile` | `src/app/app/...` |
 
 `src/app/app/` is a real `app` URL segment, **not** a route group. The public and auth
 sections use `(marketing)` / `(auth)` groups. Do not rename `src/app/app` to `(app)` —
@@ -89,6 +89,20 @@ cookie, and sends the visitor back. Real validation and DB lookups happen in
   `items.last_worn` column.
 - Seeded guest/demo closets include four outfits, one wear and one plan for today
   (`seedOutfits` in `src/lib/seed.ts`).
+
+## Weather, suggestions and insights
+
+- Weather comes from Open-Meteo in `src/lib/weather.ts`, using coordinates stored on
+  `preferences`. It is always optional: `getCurrentWeather` returns null on failure and the
+  dashboard falls back to the unfiltered suggestion. Never throw from it.
+- `suggestOutfit(items, { season, exclude })` is deterministic and pure. "Remix" inserts the
+  returned combination's signature into `suggestion_rejections` for the day; resetting
+  deletes that day's rows. The signature is order-independent.
+- `buildRemixSlots` ranks same-category alternatives by average harmony with the remaining
+  pieces. `/app/outfits/[id]/remix` only creates a new outfit; it never edits the original.
+- `analyzeWardrobe` in `src/lib/insights.ts` owns the gap/cost/never-worn rules and is
+  covered by unit tests. Change the rules there, not in the page.
+- Cost per wear is derived (`price / wears`); there is no stored column.
 
 ## Gotchas
 

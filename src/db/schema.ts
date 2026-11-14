@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   boolean,
   date,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -86,6 +87,9 @@ export const preferences = pgTable("preferences", {
   units: text("units").notNull().default("metric"),
   theme: text("theme").notNull().default("system"),
   defaultOccasion: text("default_occasion"),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
+  locationLabel: text("location_label"),
   onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
@@ -250,6 +254,35 @@ export const outfitPlans = pgTable(
 );
 
 /* -------------------------------------------------------------------------- */
+/*  Suggestion feedback                                                       */
+/* -------------------------------------------------------------------------- */
+
+export const suggestionRejections = pgTable(
+  "suggestion_rejections",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    signature: text("signature").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique("suggestion_rejections_unique").on(
+      table.userId,
+      table.day,
+      table.signature,
+    ),
+    index("suggestion_rejections_user_day_idx").on(table.userId, table.day),
+  ],
+);
+
+/* -------------------------------------------------------------------------- */
 /*  Relations                                                                 */
 /* -------------------------------------------------------------------------- */
 
@@ -299,3 +332,4 @@ export type OutfitWear = typeof outfitWears.$inferSelect;
 export type OutfitPlan = typeof outfitPlans.$inferSelect;
 export type Preference = typeof preferences.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
+export type SuggestionRejection = typeof suggestionRejections.$inferSelect;

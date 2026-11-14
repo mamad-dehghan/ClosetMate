@@ -4,7 +4,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { ItemCard } from "@/components/wardrobe/item-card";
 import { WardrobeFilters } from "@/components/wardrobe/wardrobe-filters";
 import { countItems, listItems } from "@/db/queries/items";
+import { lastWornByItem } from "@/db/queries/outfits";
 import { requireActor } from "@/lib/actor";
+import { daysAgoISO } from "@/lib/outfits";
 import { itemFiltersSchema } from "@/lib/validation";
 
 export const metadata = { title: "My wardrobe" };
@@ -25,20 +27,34 @@ export default async function WardrobePage({
     season: get("season"),
     occasion: get("occasion"),
     favorite: get("favorite"),
+    worn: get("worn"),
     sort: get("sort"),
   });
 
-  const [items, { counts, total }] = await Promise.all([
+  const [items, { counts, total }, wearMap] = await Promise.all([
     listItems(actor.userId, filters),
     countItems(actor.userId),
+    filters.worn === "stale"
+      ? lastWornByItem(actor.userId)
+      : Promise.resolve(new Map()),
   ]);
+
+  const cutoff = daysAgoISO(30);
+  const visibleItems =
+    filters.worn === "stale"
+      ? items.filter((item) => {
+          const record = wearMap.get(item.id);
+          return !record?.lastWorn || record.lastWorn < cutoff;
+        })
+      : items;
 
   const filtered = Boolean(
     filters.q ||
       filters.category ||
       filters.season ||
       filters.occasion ||
-      filters.favorite,
+      filters.favorite ||
+      filters.worn,
   );
 
   return (
@@ -52,13 +68,21 @@ export default async function WardrobePage({
               : `${total} piece${total === 1 ? "" : "s"} · ${counts.top} tops · ${counts.bottom} bottoms`}
           </p>
         </div>
-        <Link
-          href="/app/wardrobe/new"
-          className={`${buttonVariants({ size: "sm" })} hidden sm:inline-flex`}
-        >
-          <Plus className="size-4" />
-          Add
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/app/insights"
+            className={`${buttonVariants({ variant: "outline", size: "sm" })} hidden sm:inline-flex`}
+          >
+            Insights
+          </Link>
+          <Link
+            href="/app/wardrobe/new"
+            className={`${buttonVariants({ size: "sm" })} hidden sm:inline-flex`}
+          >
+            <Plus className="size-4" />
+            Add
+          </Link>
+        </div>
       </header>
 
       {total === 0 ? (
@@ -89,7 +113,7 @@ export default async function WardrobePage({
             </p>
           ) : null}
 
-          {items.length === 0 ? (
+          {visibleItems.length === 0 ? (
             <div className="rounded-card border border-dashed border-line bg-surface/60 px-5 py-12 text-center">
               <h2 className="font-display text-xl">Nothing matches those filters</h2>
               <p className="mt-2 text-sm text-muted">
@@ -104,7 +128,7 @@ export default async function WardrobePage({
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <ItemCard key={item.id} item={item} />
               ))}
             </div>
@@ -112,7 +136,8 @@ export default async function WardrobePage({
 
           {filtered ? (
             <p className="text-center text-xs text-muted">
-              Showing {items.length} of {total} pieces
+              Showing {visibleItems.length} of {total} pieces
+              {filters.worn === "stale" ? " · not worn in 30 days" : ""}
             </p>
           ) : null}
         </>

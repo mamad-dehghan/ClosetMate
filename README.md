@@ -25,8 +25,11 @@ This is the first vertical slice. It runs end to end today.
 | Outfit studio (create, edit, delete, favourite) | Working |
 | Wear history and "mark as worn" | Working |
 | Outfit calendar with day planning | Working |
+| Remix, gap detection and cost per wear | Working |
+| Weather-aware suggestions (Open-Meteo, opt-in location) | Working |
+| "Not worn in 30 days" wardrobe filter | Working |
 | Profile, preferences, JSON export, account deletion | Working |
-| Weather-aware suggestions | Planned |
+| Capsule wardrobe, challenges, packing assistant | Planned |
 
 See [PLAN.md](./PLAN.md) for the full shipped / next breakdown.
 
@@ -41,6 +44,7 @@ See [PLAN.md](./PLAN.md) for the full shipped / next breakdown.
 - **Neon** for production
 - **Auth.js v5** (Google + dev credentials), JWT sessions
 - **Vercel Blob** for production images, local disk in development
+- **Open-Meteo** for weather (keyless, cached server-side)
 - **Bun** for install, scripts, and tests (no Node-specific tooling)
 
 No separate backend. Route handlers and server actions live in the same app, so the whole thing deploys to Vercel as one project.
@@ -170,9 +174,10 @@ src/
 │  ├─ app/                  the signed-in / guest application
 │  │  ├─ today/             dashboard, planned outfit, daily suggestion
 │  │  ├─ wardrobe/          grid, new, [id], [id]/edit
-│  │  ├─ outfits/           list, studio, [id], [id]/edit
+│  │  ├─ outfits/           list, studio, [id], [id]/edit, [id]/remix
 │  │  ├─ calendar/          month grid and day planning
-│  │  └─ profile/           preferences, export, deletion
+│  │  ├─ insights/          coverage, gaps, cost per wear, never worn
+│  │  └─ profile/           preferences, location, export, deletion
 │  └─ api/                  auth, guest, upload, files, export
 ├─ components/              ui/, wardrobe/, layout/, brand/, auth/
 ├─ db/                      schema, dual-driver client, queries

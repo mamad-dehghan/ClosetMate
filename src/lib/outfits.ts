@@ -93,6 +93,13 @@ export function formatDayLabel(iso: string) {
   }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
+/** ISO date N days before `now`, in local time. */
+export function daysAgoISO(days: number, now = new Date()) {
+  const date = new Date(now);
+  date.setDate(date.getDate() - days);
+  return isoDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+}
+
 export function formatShortDate(iso: string) {
   const [year, month, day] = iso.split("-").map(Number);
   if (!year || !month || !day) return iso;

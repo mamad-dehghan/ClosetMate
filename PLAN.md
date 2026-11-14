@@ -10,11 +10,9 @@ Legend: `[x]` shipped · `[ ]` planned · `[~]` partial / schema only
 
 ## 1. Where the project is
 
-**Pass 1 (core vertical slice) and the core of Pass 2 are complete and running.**
+**Pass 1 (core vertical slice) and Pass 2 are complete, and Pass 3 has started.**
 
-The product promise — "better outfits from the clothes you already own" — is already
-deliverable: a visitor lands, opens a guest closet, adds or edits real items, builds
-outfits, plans them on a calendar and records when they were worn.
+The product promise — "better outfits from the clothes you already own" — is deliverable end to end: a visitor lands, opens a guest closet, adds or edits real items, builds outfits, plans them on a calendar, records when they were worn, and gets told what is missing and what each piece costs per wear.
 
 ### Pass 1 checklist
 
@@ -59,7 +57,7 @@ outfits, plans them on a calendar and records when they were worn.
 - [x] Sign out
 
 **Quality**
-- [x] 49 tests covering colour math, versatility, form validation, calendar helpers and outfit persistence (real PGlite integration)
+- [x] 71 tests covering colour math, versatility, form validation, calendar helpers, weather bands, remix ranking, wardrobe analysis and outfit persistence (real PGlite integration)
 - [x] `tsc --noEmit` clean, production build passes
 - [x] Guest claim verified end to end (12 items moved, guest row removed)
 - [x] README with setup, env, structure and deployment
@@ -94,7 +92,7 @@ Goal: ClosetMate becomes something you open on a weekday morning.
 - [x] Times worn and last worn on the outfit detail
 - [x] Per-item wear count and last worn on item detail (derived through outfit links)
 - [x] Worn-this-month counter on `/today`
-- [ ] "Not worn recently" filter on the wardrobe (next)
+- [x] "Not worn in 30 days" filter on the wardrobe
 
 ### 2.3 Calendar — done
 - [x] `/app/calendar`: six-week month grid, Monday first, month navigation
@@ -103,27 +101,35 @@ Goal: ClosetMate becomes something you open on a weekday morning.
 - [x] Upcoming plan replaces the suggestion on `/today`
 - [x] Seeded demo data: four outfits, one wear, one plan for today
 
-### 2.4 Today upgrade — partial
+### 2.4 Today upgrade — done
 - [x] Planned outfit card with pieces and a "Mark worn" action
 - [x] Deterministic suggestion shown as an alternative when a plan exists
-- [ ] Reject / remix actions persisted as feedback
+- [x] Remix rejects the current combination for the day (`suggestion_rejections`)
+- [x] "Show ideas again" resets the day's rejections
+- [x] Exhausted state distinguishes an empty wardrobe from exhausted ideas
 
-### 2.5 Weather — not started
-- [ ] Server-side weather fetch (Open-Meteo, no key) with a cached location preference
-- [ ] Map temperature band → season filter before suggesting
-- [ ] Graceful degradation when location is unavailable
+### 2.5 Weather — done
+- [x] Opt-in location in preferences (`latitude`/`longitude`/`location_label`)
+- [x] Browser geolocation captured from the profile, no third-party key
+- [x] Server-side Open-Meteo fetch cached for 30 minutes, 4s timeout
+- [x] Temperature → season band filters suggestions; untagged pieces still qualify
+- [x] Graceful degradation: no location or network failure means no filtering
 
 ---
 
 ## 3. Pass 3 — differentiation
 
-- [ ] Outfit Remix: swap one or two pieces in a saved outfit, ranked by harmony
-- [ ] Closet Gap Detector: report categories that block combinations (e.g. tops with no matching bottom)
+- [x] Outfit Remix: swap pieces in a saved outfit, alternatives ranked by harmony
+- [x] Closet Gap Detector: report categories that block combinations and the outfits they unlock
+- [x] Cost per wear: purchase price divided by recorded wears, on item detail and insights
+- [x] Insights page: coverage, gaps, cost leaders, never-worn pieces
 - [ ] Capsule Wardrobe: named subsets of items with coverage % and "can build N outfits"
-- [ ] Cost per wear: `purchasePrice / wears`, surfaced on item detail
 - [ ] Wardrobe Challenges: time-boxed prompts with completion state
 - [ ] Packing Assistant: trip length + weather band → minimal item set
 - [ ] Seasonal rotation: archive/unarchive items without deleting
+
+`/app/insights` is reachable from the wardrobe header and the profile. It is not in the
+bottom navigation on purpose — five tabs is the limit on a 390px screen.
 
 These all reuse the existing item/outfit data. None require generative AI.
 
@@ -152,6 +158,9 @@ These all reuse the existing item/outfit data. None require generative AI.
 | Signed guest cookie, not a plain user id | Prevents anyone constructing a guest id and reading a stranger's closet. |
 | Deterministic suggestion, no LLM | Instant, free, explainable, and testable. AI is reserved for data entry, where it removes real effort. |
 | Anonymous user seeded with 12 pieces | Makes the demo immediately legible; the blueprint's "five items is enough" becomes visible rather than described. |
+| Open-Meteo for weather | No API key, no attribution burden, one HTTP call, cacheable for 30 minutes. |
+| Suggestion feedback as a rejection table | The only signal we need today is "show me another"; a full feedback model would be guesswork before there is usage data. |
+| Remix ranks by harmony only | Explainable and instant. Fit and occasion already constrain the base outfit. |
 | `src/app/app/*` | URL segment `/app` for the product, route groups for public/auth sections. |
 | Plain `<img>` for garment images | Uploaded files are served through a route handler; the optimizer adds no value and complicates self-hosting. |
 | Local storage adapter mirrors Blob | Development needs no cloud account; production switches with one env var. |
@@ -167,12 +176,18 @@ These all reuse the existing item/outfit data. None require generative AI.
 - PGlite is single-writer; fine for local dev, not for deployment.
 - Theme preference is stored but the UI is light-only.
 - No pagination: wardrobe queries cap at 200 rows.
-- Outfit tables exist but are unreferenced by UI, so the JSON export currently always has an empty `outfits` array.
+- Weather depends on the browser location permission and Open-Meteo availability; both
+  degrade to the unfiltered suggestion rather than an error.
+- Cost per wear only covers items that appear in a worn outfit and have a price.
+- Remix reranks by colour only; it does not consider occasion or fit beyond the filters
+  already applied to the base outfit.
+- `/app/insights` is intentionally outside the bottom navigation; discoverable from the
+  wardrobe header and the profile.
 - Search is `ILIKE`-based; no fuzzy matching or full-text index yet.
 
 **Open questions**
 1. Pricing / monetisation — not decided; keep all core features free.
-2. Weather provider and location permission timing (ask at first calendar use?).
+2. Weather: is a manual city picker enough, or should we add reverse geocoding?
 3. Sharing model — public links per outfit vs. a profile page. Leaning per-outfit links.
 4. Background removal: client-side model vs. paid API.
 5. Whether to support multiple photos per item (currently one).

@@ -4,25 +4,36 @@ import {
   CalendarDays,
   Camera,
   Check,
+  CloudSun,
   Layers,
   Plus,
+  RefreshCw,
   Shirt,
   Sparkles,
   Star,
   TrendingUp,
 } from "lucide-react";
+import { eq } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { GarmentImage } from "@/components/wardrobe/garment-image";
 import { ItemCard } from "@/components/wardrobe/item-card";
+import { db } from "@/db/client";
+import { preferences } from "@/db/schema";
 import { countItems, favoriteItems, listItems, recentItems } from "@/db/queries/items";
 import { planForDate, wearsThisMonth } from "@/db/queries/outfits";
+import { rejectionsForDay } from "@/db/queries/suggestions";
 import { requireActor } from "@/lib/actor";
 import { markOutfitWornAction } from "@/lib/actions/outfits";
+import {
+  rejectSuggestionAction,
+  resetSuggestionsAction,
+} from "@/lib/actions/suggestions";
 import { categoryMeta, OCCASIONS } from "@/lib/categories";
 import { todayISO } from "@/lib/outfits";
+import { suggestionSignature, suggestOutfit } from "@/lib/suggest";
 import { countsFromItems, outfitCapacity } from "@/lib/versatility";
-import { suggestOutfit } from "@/lib/suggest";
+import { SEASON_COPY, getCurrentWeather } from "@/lib/weather";
 
 export const metadata = { title: "Today" };
 
@@ -31,7 +42,7 @@ export default async function TodayPage() {
   const iso = todayISO();
   const month = iso.slice(0, 7);
 
-  const [all, { counts, total }, recent, favorites, plan, wornThisMonth] =
+  const [all, { counts, total }, recent, favorites, plan, wornThisMonth, prefs, rejected] =
     await Promise.all([
       listItems(actor.userId),
       countItems(actor.userId),
@@ -39,9 +50,24 @@ export default async function TodayPage() {
       favoriteItems(actor.userId, 4),
       planForDate(actor.userId, iso),
       wearsThisMonth(actor.userId, month),
+      db.query.preferences.findFirst({
+        where: eq(preferences.userId, actor.userId),
+      }),
+      rejectionsForDay(actor.userId, iso),
     ]);
 
-  const suggestion = suggestOutfit(all);
+  const weather =
+    prefs?.latitude !== null &&
+    prefs?.latitude !== undefined &&
+    prefs?.longitude !== null &&
+    prefs?.longitude !== undefined
+      ? await getCurrentWeather(prefs.latitude, prefs.longitude)
+      : null;
+
+  const suggestion = suggestOutfit(all, {
+    season: weather?.season,
+    exclude: new Set(rejected),
+  });
   const capacity = outfitCapacity(countsFromItems(all));
   const today = new Intl.DateTimeFormat("en", {
     weekday: "long",
@@ -61,6 +87,21 @@ export default async function TodayPage() {
             ? "Your wardrobe is empty — add a few pieces to get started."
             : `You can build about ${capacity} complete outfit${capacity === 1 ? "" : "s"} right now.`}
         </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {weather ? (
+            <Badge tone="outline">
+              <CloudSun className="size-3.5" />
+              {weather.temperature}°C · {weather.label} · {SEASON_COPY[weather.season]}
+            </Badge>
+          ) : total > 0 ? (
+            <Link
+              href="/app/profile"
+              className="text-xs text-muted underline-offset-4 hover:text-ink hover:underline"
+            >
+              Add a location for weather-aware ideas
+            </Link>
+          ) : null}
+        </div>
       </header>
 
       {/* Planned outfit */}
@@ -156,16 +197,24 @@ export default async function TodayPage() {
             <p className="text-xs text-muted">
               Picked from available pieces by colour harmony.
             </p>
-            <Link
-              href="/app/wardrobe"
-              className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
-            >
-              Remix
-              <ArrowRight className="size-3.5" />
-            </Link>
+            <form action={rejectSuggestionAction} className="shrink-0">
+              <input type="hidden" name="day" value={iso} />
+              <input
+                type="hidden"
+                name="signature"
+                value={suggestionSignature(suggestion.items)}
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+              >
+                Remix
+                <RefreshCw className="size-3.5" />
+              </button>
+            </form>
           </div>
         </section>
-      ) : (
+      ) : total === 0 ? (
         <section className="rounded-card border border-dashed border-line bg-surface/60 px-5 py-10 text-center">
           <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-surface-2 text-muted">
             <Shirt className="size-5" />
@@ -182,6 +231,41 @@ export default async function TodayPage() {
             <Plus className="size-4" />
             Add clothing
           </Link>
+        </section>
+      ) : (
+        <section className="rounded-card border border-dashed border-line bg-surface/60 px-5 py-10 text-center">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-surface-2 text-muted">
+            <Sparkles className="size-5" />
+          </span>
+          <h2 className="mt-4 font-display text-2xl">
+            {rejected.length > 0 ? "No more ideas today" : "Not enough for a full outfit"}
+          </h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
+            {rejected.length > 0
+              ? "You remixed every combination we could build. Bring them back, or add another piece."
+              : "Add the missing category and ClosetMate will start combining again."}
+          </p>
+          <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
+            {rejected.length > 0 ? (
+              <form action={resetSuggestionsAction}>
+                <input type="hidden" name="day" value={iso} />
+                <button
+                  type="submit"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  <RefreshCw className="size-4" />
+                  Show ideas again
+                </button>
+              </form>
+            ) : null}
+            <Link
+              href="/app/wardrobe/new"
+              className={buttonVariants({ size: "sm" })}
+            >
+              <Plus className="size-4" />
+              Add clothing
+            </Link>
+          </div>
         </section>
       )}
 

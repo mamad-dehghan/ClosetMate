@@ -149,6 +149,26 @@ export async function wearsThisMonth(userId: string, month: string) {
   return Number(row?.total ?? 0);
 }
 
+export async function lastWornByItem(userId: string) {
+  const rows = await db
+    .select({
+      itemId: outfitItems.itemId,
+      wears: sql<number>`count(*)::int`,
+      lastWorn: sql<string | null>`max(${outfitWears.wornOn})`,
+    })
+    .from(outfitWears)
+    .innerJoin(outfitItems, eq(outfitItems.outfitId, outfitWears.outfitId))
+    .where(eq(outfitWears.userId, userId))
+    .groupBy(outfitItems.itemId);
+
+  return new Map<string, WearInfo>(
+    rows.map((row) => [
+      row.itemId,
+      { wears: Number(row.wears), lastWorn: row.lastWorn },
+    ]),
+  );
+}
+
 export async function itemWearStats(userId: string, itemId: string) {
   const [row] = await db
     .select({

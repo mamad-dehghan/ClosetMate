@@ -14,12 +14,13 @@ Migrations: `drizzle/` · config: `drizzle.config.ts` (postgresql dialect, snake
 | --- | --- |
 | `users` | Auth.js users plus `isAnonymous` / `claimedAt` for guest closets |
 | `accounts`, `sessions`, `verification_tokens` | Auth.js adapter tables (JWT sessions in practice) |
-| `preferences` | currency, units, theme, onboarding timestamp |
+| `preferences` | currency, units, theme, onboarding timestamp, optional weather coordinates |
 | `items` | the wardrobe: category, image, primary colour, seasons[], occasions[], price, laundry status |
 | `tags`, `item_tags` | free-form labels |
-| `outfits`, `outfit_items` | saved combinations (UI next pass) |
+| `outfits`, `outfit_items` | saved combinations and their ordered pieces |
 | `outfit_wears` | worn-on history |
 | `outfit_plans` | calendar plans |
+| `suggestion_rejections` | "remix" feedback: one row per rejected signature per user per day |
 
 `items.category` is plain text with a TS union (`Category` in `src/lib/categories.ts`),
 not a Postgres enum — adding a category must not require a migration with `ALTER TYPE`.
