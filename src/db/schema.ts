@@ -129,6 +129,7 @@ export const items = pgTable(
     currency: text("currency").notNull().default("USD"),
     laundryStatus: text("laundry_status").notNull().default("available"),
     favorite: boolean("favorite").notNull().default(false),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -283,6 +284,67 @@ export const suggestionRejections = pgTable(
 );
 
 /* -------------------------------------------------------------------------- */
+/*  Capsules & challenges                                                     */
+/* -------------------------------------------------------------------------- */
+
+export const capsules = pgTable(
+  "capsules",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    season: text("season"),
+    occasion: text("occasion"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("capsules_user_idx").on(table.userId)],
+);
+
+export const capsuleItems = pgTable(
+  "capsule_items",
+  {
+    capsuleId: text("capsule_id")
+      .notNull()
+      .references(() => capsules.id, { onDelete: "cascade" }),
+    itemId: text("item_id")
+      .notNull()
+      .references(() => items.id, { onDelete: "cascade" }),
+    position: integer("position").notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.capsuleId, table.itemId] })],
+);
+
+export const challengeCompletions = pgTable(
+  "challenge_completions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    completedOn: date("completed_on").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique("challenge_completions_user_key").on(table.userId, table.key),
+  ],
+);
+
+/* -------------------------------------------------------------------------- */
 /*  Relations                                                                 */
 /* -------------------------------------------------------------------------- */
 
@@ -318,6 +380,19 @@ export const outfitItemsRelations = relations(outfitItems, ({ one }) => ({
   item: one(items, { fields: [outfitItems.itemId], references: [items.id] }),
 }));
 
+export const capsulesRelations = relations(capsules, ({ one, many }) => ({
+  owner: one(users, { fields: [capsules.userId], references: [users.id] }),
+  items: many(capsuleItems),
+}));
+
+export const capsuleItemsRelations = relations(capsuleItems, ({ one }) => ({
+  capsule: one(capsules, {
+    fields: [capsuleItems.capsuleId],
+    references: [capsules.id],
+  }),
+  item: one(items, { fields: [capsuleItems.itemId], references: [items.id] }),
+}));
+
 /* -------------------------------------------------------------------------- */
 /*  Inferred types                                                            */
 /* -------------------------------------------------------------------------- */
@@ -333,3 +408,6 @@ export type OutfitPlan = typeof outfitPlans.$inferSelect;
 export type Preference = typeof preferences.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type SuggestionRejection = typeof suggestionRejections.$inferSelect;
+export type Capsule = typeof capsules.$inferSelect;
+export type CapsuleItem = typeof capsuleItems.$inferSelect;
+export type ChallengeCompletion = typeof challengeCompletions.$inferSelect;

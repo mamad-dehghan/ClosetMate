@@ -98,16 +98,24 @@ export default async function ProfilePage() {
       />
 
       <section className="rounded-card border border-line bg-surface p-5 shadow-card">
-        <h2 className="text-sm font-semibold">Wardrobe insights</h2>
-        <p className="mt-1 text-sm text-muted">
-          Coverage, gaps, cost per wear and the pieces you never reach for.
-        </p>
-        <Link
-          href="/app/insights"
-          className={`${buttonVariants({ variant: "outline", size: "sm" })} mt-4`}
-        >
-          Open insights
-        </Link>
+        <h2 className="text-sm font-semibold">Tools</h2>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {[
+            { href: "/app/insights", label: "Insights", hint: "Coverage, gaps, cost per wear" },
+            { href: "/app/capsules", label: "Capsules", hint: "Small wearable subsets" },
+            { href: "/app/challenges", label: "Challenges", hint: "Weekly prompts" },
+            { href: "/app/packing", label: "Packing", hint: "Trip lists from your wardrobe" },
+          ].map((tool) => (
+            <Link
+              key={tool.href}
+              href={tool.href}
+              className="rounded-xl border border-line bg-canvas px-3.5 py-3 transition-colors hover:border-ink/20"
+            >
+              <p className="text-sm font-medium">{tool.label}</p>
+              <p className="mt-0.5 text-xs text-muted">{tool.hint}</p>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="rounded-card border border-line bg-surface p-5 shadow-card">

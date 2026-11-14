@@ -15,6 +15,13 @@
       "when": 1794679378115,
       "tag": "0001_smart_living_lightning",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794691356199,
+      "tag": "0002_flawless_texas_twister",
+      "breakpoints": true
     }
   ]
 }

@@ -63,7 +63,8 @@ PGlite refuses to start if its directory is missing — the client creates it wi
 | `/` | `src/app/(marketing)/page.tsx` |
 | `/demo` | `src/app/(marketing)/demo/page.tsx` |
 | `/login`, `/register` | `src/app/(auth)/...` |
-| `/app/today`, `/app/wardrobe`, `/app/outfits`, `/app/calendar`, `/app/insights`, `/app/profile` | `src/app/app/...` |
+| `/app/today`, `/app/wardrobe`, `/app/outfits`, `/app/calendar`, `/app/profile` | `src/app/app/...` |
+| `/app/insights`, `/app/capsules`, `/app/challenges`, `/app/packing` | tools, linked from the profile |
 
 `src/app/app/` is a real `app` URL segment, **not** a route group. The public and auth
 sections use `(marketing)` / `(auth)` groups. Do not rename `src/app/app` to `(app)` —
@@ -103,6 +104,13 @@ cookie, and sends the visitor back. Real validation and DB lookups happen in
 - `analyzeWardrobe` in `src/lib/insights.ts` owns the gap/cost/never-worn rules and is
   covered by unit tests. Change the rules there, not in the page.
 - Cost per wear is derived (`price / wears`); there is no stored column.
+- Seasonal rotation uses `items.archived_at`. `listItems` excludes archived rows unless
+  `archived: "1"` is passed, and `countItems` always ignores them. Suggestions, insights,
+  packing and both builders all read through `listItems`, so archiving hides a piece
+  everywhere automatically. Outfits that already contain it keep working.
+- Capsules, challenges and packing are pure-logic driven (`capsules.ts`, `challenges.ts`,
+  `packing.ts`) with the DB only storing selections and completions. Keep the rules in
+  those files.
 
 ## Gotchas
 

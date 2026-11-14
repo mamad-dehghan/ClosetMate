@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { outfitItems, outfits, preferences, users } from "@/db/schema";
+import { capsuleItems, capsules, challengeCompletions, outfitItems, outfits, preferences, users } from "@/db/schema";
 import { requireActor } from "@/lib/actor";
 import { listItems } from "@/db/queries/items";
 
@@ -12,17 +12,26 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const actor = await requireActor();
 
-  const [user, prefs, wardrobe, userOutfits] = await Promise.all([
-    db.query.users.findFirst({
-      where: eq(users.id, actor.userId),
-      columns: { id: true, name: true, email: true, createdAt: true },
-    }),
-    db.query.preferences.findFirst({
-      where: eq(preferences.userId, actor.userId),
-    }),
-    listItems(actor.userId),
-    db.select().from(outfits).where(eq(outfits.userId, actor.userId)),
-  ]);
+  const [user, prefs, activeItems, archivedItems, userOutfits, userCapsules, completions] =
+    await Promise.all([
+      db.query.users.findFirst({
+        where: eq(users.id, actor.userId),
+        columns: { id: true, name: true, email: true, createdAt: true },
+      }),
+      db.query.preferences.findFirst({
+        where: eq(preferences.userId, actor.userId),
+      }),
+      listItems(actor.userId),
+      listItems(actor.userId, { archived: "1" }),
+      db.select().from(outfits).where(eq(outfits.userId, actor.userId)),
+      db.select().from(capsules).where(eq(capsules.userId, actor.userId)),
+      db
+        .select()
+        .from(challengeCompletions)
+        .where(eq(challengeCompletions.userId, actor.userId)),
+    ]);
+
+  const wardrobe = [...activeItems, ...archivedItems];
 
   const outfitIds = userOutfits.map((outfit) => outfit.id);
   const outfitPieces =
@@ -31,6 +40,15 @@ export async function GET() {
           .select()
           .from(outfitItems)
           .where(inArray(outfitItems.outfitId, outfitIds))
+      : [];
+
+  const capsuleIds = userCapsules.map((capsule) => capsule.id);
+  const capsulePieces =
+    capsuleIds.length > 0
+      ? await db
+          .select()
+          .from(capsuleItems)
+          .where(inArray(capsuleItems.capsuleId, capsuleIds))
       : [];
 
   const payload = {
@@ -45,6 +63,13 @@ export async function GET() {
         .filter((piece) => piece.outfitId === outfit.id)
         .map((piece) => piece.itemId),
     })),
+    capsules: userCapsules.map((capsule) => ({
+      ...capsule,
+      items: capsulePieces
+        .filter((piece) => piece.capsuleId === capsule.id)
+        .map((piece) => piece.itemId),
+    })),
+    challengeCompletions: completions,
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

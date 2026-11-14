@@ -21,6 +21,8 @@ Migrations: `drizzle/` · config: `drizzle.config.ts` (postgresql dialect, snake
 | `outfit_wears` | worn-on history |
 | `outfit_plans` | calendar plans |
 | `suggestion_rejections` | "remix" feedback: one row per rejected signature per user per day |
+| `capsules`, `capsule_items` | named wardrobe subsets with ordered pieces |
+| `challenge_completions` | one row per completed challenge key per user |
 
 `items.category` is plain text with a TS union (`Category` in `src/lib/categories.ts`),
 not a Postgres enum — adding a category must not require a migration with `ALTER TYPE`.

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { items, type Item } from "@/db/schema";
 import type { Category } from "@/lib/categories";
@@ -8,6 +8,12 @@ export type WardrobeItem = Item;
 
 export async function listItems(userId: string, filters: ItemFilters = {}) {
   const conditions = [eq(items.userId, userId)];
+
+  if (filters.archived === "1") {
+    conditions.push(isNotNull(items.archivedAt));
+  } else {
+    conditions.push(isNull(items.archivedAt));
+  }
 
   if (filters.q) {
     const needle = `%${filters.q}%`;
@@ -61,7 +67,7 @@ export async function countItems(userId: string) {
   const rows = await db
     .select({ category: items.category, total: sql<number>`count(*)::int` })
     .from(items)
-    .where(eq(items.userId, userId))
+    .where(and(eq(items.userId, userId), isNull(items.archivedAt)))
     .groupBy(items.category);
 
   const counts: Record<Category, number> = {

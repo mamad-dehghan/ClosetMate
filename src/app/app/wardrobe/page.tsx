@@ -28,6 +28,7 @@ export default async function WardrobePage({
     occasion: get("occasion"),
     favorite: get("favorite"),
     worn: get("worn"),
+    archived: get("archived"),
     sort: get("sort"),
   });
 
@@ -54,18 +55,23 @@ export default async function WardrobePage({
       filters.season ||
       filters.occasion ||
       filters.favorite ||
-      filters.worn,
+      filters.worn ||
+      filters.archived,
   );
 
   return (
     <div className="space-y-5">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl sm:text-4xl">My wardrobe</h1>
+          <h1 className="font-display text-3xl sm:text-4xl">
+            {filters.archived === "1" ? "Archived" : "My wardrobe"}
+          </h1>
           <p className="mt-1 text-sm text-muted">
             {total === 0
               ? "Nothing here yet."
-              : `${total} piece${total === 1 ? "" : "s"} · ${counts.top} tops · ${counts.bottom} bottoms`}
+              : filters.archived === "1"
+                ? `${items.length} archived piece${items.length === 1 ? "" : "s"}`
+                : `${total} piece${total === 1 ? "" : "s"} · ${counts.top} tops · ${counts.bottom} bottoms`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -85,7 +91,7 @@ export default async function WardrobePage({
         </div>
       </header>
 
-      {total === 0 ? (
+      {total === 0 && filters.archived !== "1" ? (
         <div className="rounded-card border border-dashed border-line bg-surface/60 px-6 py-14 text-center">
           <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-surface-2 text-muted">
             <Shirt className="size-5" />
