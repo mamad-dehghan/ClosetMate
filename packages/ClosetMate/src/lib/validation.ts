@@ -80,6 +80,25 @@ export const outfitInputSchema = z.object({
 
 export type OutfitInput = z.infer<typeof outfitInputSchema>;
 
+export const capsuleInputSchema = z.object({
+  name: z.string().trim().max(80).default(""),
+  description: optionalText(400),
+  season: z
+    .enum(SEASON_VALUES)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  occasion: z
+    .enum(OCCASION_VALUES)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  itemIds: z
+    .array(z.string().trim().min(1))
+    .min(1, "Pick at least one piece")
+    .max(40, "A capsule is meant to be small"),
+});
+
+export type CapsuleInput = z.infer<typeof capsuleInputSchema>;
+
 export const outfitPlanSchema = z.object({
   outfitId: z.string().trim().min(1),
   plannedFor: isoDateString,
@@ -100,6 +119,7 @@ export const itemFiltersSchema = z.object({
   color: z.string().trim().optional(),
   favorite: z.enum(["1", "0"]).optional(),
   worn: z.enum(["stale"]).optional(),
+  archived: z.enum(["1"]).optional(),
   sort: z.enum(["recent", "name", "color"]).optional(),
 });
 

@@ -5,7 +5,12 @@
 import { eq } from "drizzle-orm";
 import { db } from "../src/db/client";
 import { users } from "../src/db/schema";
-import { ensurePreferences, seedOutfits, seedWardrobe } from "../src/lib/seed";
+import {
+  ensurePreferences,
+  seedCapsules,
+  seedOutfits,
+  seedWardrobe,
+} from "../src/lib/seed";
 
 const EMAIL = "demo@closetmate.app";
 
@@ -35,6 +40,7 @@ if (!userId) {
 await ensurePreferences(userId);
 const added = await seedWardrobe(userId);
 const outfitsAdded = await seedOutfits(userId);
+const capsulesAdded = await seedCapsules(userId);
 
 console.log(
   added > 0
@@ -45,6 +51,11 @@ console.log(
   outfitsAdded > 0
     ? `Seeded ${outfitsAdded} outfits.`
     : "Outfits already exist, nothing seeded.",
+);
+console.log(
+  capsulesAdded > 0
+    ? `Seeded ${capsulesAdded} capsules.`
+    : "Capsules already exist, nothing seeded.",
 );
 console.log(`Sign in with the dev login using ${EMAIL}`);
 

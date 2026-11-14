@@ -10,9 +10,13 @@ Legend: `[x]` shipped · `[ ]` planned · `[~]` partial / schema only
 
 ## 1. Where the project is
 
-**Pass 1 (core vertical slice) and Pass 2 are complete, and Pass 3 has started.**
+**Passes 1–3 are complete.** Pass 4 (sharing, AI data entry, PWA) is optional and
+unstarted.
 
-The product promise — "better outfits from the clothes you already own" — is deliverable end to end: a visitor lands, opens a guest closet, adds or edits real items, builds outfits, plans them on a calendar, records when they were worn, and gets told what is missing and what each piece costs per wear.
+The product promise — "better outfits from the clothes you already own" — is deliverable
+end to end: a visitor lands, opens a guest closet, adds or edits real items, builds and
+remixes outfits, plans them on a calendar, records when they were worn, packs for a trip
+from the same wardrobe, and gets told what is missing and what each piece costs per wear.
 
 ### Pass 1 checklist
 
@@ -57,7 +61,7 @@ The product promise — "better outfits from the clothes you already own" — is
 - [x] Sign out
 
 **Quality**
-- [x] 71 tests covering colour math, versatility, form validation, calendar helpers, weather bands, remix ranking, wardrobe analysis and outfit persistence (real PGlite integration)
+- [x] 84 tests covering colour math, versatility, form validation, calendar helpers, weather bands, remix ranking, wardrobe analysis, packing, capsules, challenges, archiving (PGlite integration) and outfit persistence (PGlite integration)
 - [x] `tsc --noEmit` clean, production build passes
 - [x] Guest claim verified end to end (12 items moved, guest row removed)
 - [x] README with setup, env, structure and deployment
@@ -117,19 +121,19 @@ Goal: ClosetMate becomes something you open on a weekday morning.
 
 ---
 
-## 3. Pass 3 — differentiation
+## 3. Pass 3 — differentiation (complete)
 
 - [x] Outfit Remix: swap pieces in a saved outfit, alternatives ranked by harmony
 - [x] Closet Gap Detector: report categories that block combinations and the outfits they unlock
 - [x] Cost per wear: purchase price divided by recorded wears, on item detail and insights
 - [x] Insights page: coverage, gaps, cost leaders, never-worn pieces
-- [ ] Capsule Wardrobe: named subsets of items with coverage % and "can build N outfits"
-- [ ] Wardrobe Challenges: time-boxed prompts with completion state
-- [ ] Packing Assistant: trip length + weather band → minimal item set
-- [ ] Seasonal rotation: archive/unarchive items without deleting
+- [x] Capsule Wardrobe: named subsets with coverage %, outfit capacity and missing basics
+- [x] Wardrobe Challenges: weekly prompts with live progress and stored completions
+- [x] Packing Assistant: days + forecast + occasion → minimal list, saveable as a capsule
+- [x] Seasonal rotation: archive/restore pieces, hidden from suggestions and builders
 
-`/app/insights` is reachable from the wardrobe header and the profile. It is not in the
-bottom navigation on purpose — five tabs is the limit on a 390px screen.
+Tools live under the profile "Tools" grid: Insights, Capsules, Challenges, Packing. They
+are deliberately outside the bottom navigation — five tabs is the limit on a 390px screen.
 
 These all reuse the existing item/outfit data. None require generative AI.
 
@@ -181,8 +185,13 @@ These all reuse the existing item/outfit data. None require generative AI.
 - Cost per wear only covers items that appear in a worn outfit and have a price.
 - Remix reranks by colour only; it does not consider occasion or fit beyond the filters
   already applied to the base outfit.
-- `/app/insights` is intentionally outside the bottom navigation; discoverable from the
-  wardrobe header and the profile.
+- Capsules are capped at 40 pieces; packing picks are heuristic, not optimised.
+- Challenge progress is derived live from the current week; completions are stored only
+  when the user confirms them, so a finished week can still be claimed later.
+- Archived pieces stay inside outfits that already reference them; the outfit builder and
+  suggestions no longer offer them.
+- `/app/insights`, `/app/capsules`, `/app/challenges` and `/app/packing` are intentionally
+  outside the bottom navigation; they are reachable from the profile Tools grid.
 - Search is `ILIKE`-based; no fuzzy matching or full-text index yet.
 
 **Open questions**

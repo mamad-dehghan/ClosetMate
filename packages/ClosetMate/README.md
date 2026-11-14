@@ -27,9 +27,11 @@ This is the first vertical slice. It runs end to end today.
 | Outfit calendar with day planning | Working |
 | Remix, gap detection and cost per wear | Working |
 | Weather-aware suggestions (Open-Meteo, opt-in location) | Working |
+| Capsules, weekly challenges, packing assistant | Working |
+| Seasonal rotation (archive/restore) | Working |
 | "Not worn in 30 days" wardrobe filter | Working |
 | Profile, preferences, JSON export, account deletion | Working |
-| Capsule wardrobe, challenges, packing assistant | Planned |
+| Sharing, AI recognition, PWA | Planned |
 
 See [PLAN.md](./PLAN.md) for the full shipped / next breakdown.
 
@@ -177,7 +179,10 @@ src/
 │  │  ├─ outfits/           list, studio, [id], [id]/edit, [id]/remix
 │  │  ├─ calendar/          month grid and day planning
 │  │  ├─ insights/          coverage, gaps, cost per wear, never worn
-│  │  └─ profile/           preferences, location, export, deletion
+│  │  ├─ capsules/          list, new, [id], [id]/edit
+│  │  ├─ challenges/        weekly prompts and completion
+│  │  ├─ packing/           trip list generator
+│  │  └─ profile/           preferences, location, tools, export, deletion
 │  └─ api/                  auth, guest, upload, files, export
 ├─ components/              ui/, wardrobe/, layout/, brand/, auth/
 ├─ db/                      schema, dual-driver client, queries

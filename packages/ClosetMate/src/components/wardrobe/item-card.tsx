@@ -2,8 +2,7 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 import { GarmentImage } from "@/components/wardrobe/garment-image";
 import { Badge } from "@/components/ui/badge";
-import { toggleFavoriteAction } from "@/lib/actions/items";
-import { categoryMeta, colorName } from "@/lib/categories";
+import { toggleFavoriteAction } from "@/lib/actions/items";import { categoryMeta, colorName } from "@/lib/categories";
 import type { Item } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +39,10 @@ export function ItemCard({ item }: { item: Item }) {
             {item.laundryStatus !== "available" ? (
               <Badge tone="warning" className="ml-auto px-1.5 py-0 text-[10px]">
                 {item.laundryStatus === "laundry" ? "In wash" : "Repair"}
+              </Badge>
+            ) : item.archivedAt ? (
+              <Badge tone="outline" className="ml-auto px-1.5 py-0 text-[10px]">
+                Archived
               </Badge>
             ) : null}
           </div>

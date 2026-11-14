@@ -27,6 +27,7 @@ export function makeItem(
     currency: "USD",
     laundryStatus: overrides.laundryStatus ?? "available",
     favorite: false,
+    archivedAt: overrides.archivedAt ?? null,
     createdAt: new Date(),
     updatedAt: new Date(),
   } as Item;

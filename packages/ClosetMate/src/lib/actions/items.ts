@@ -179,6 +179,32 @@ export async function deleteItemAction(formData: FormData) {
   redirect("/app/wardrobe?deleted=1");
 }
 
+export async function toggleItemArchiveAction(formData: FormData) {
+  const actor = await requireActor();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const existing = await db.query.items.findFirst({
+    where: and(eq(items.id, id), eq(items.userId, actor.userId)),
+    columns: { id: true, archivedAt: true },
+  });
+  if (!existing) return;
+
+  await db
+    .update(items)
+    .set({
+      archivedAt: existing.archivedAt ? null : new Date(),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(items.id, id), eq(items.userId, actor.userId)));
+
+  revalidatePath("/app/wardrobe");
+  revalidatePath(`/app/wardrobe/${id}`);
+  revalidatePath("/app/today");
+  revalidatePath("/app/insights");
+  revalidatePath("/app/outfits");
+}
+
 export async function toggleFavoriteAction(formData: FormData) {
   const actor = await requireActor();
   const id = String(formData.get("id") ?? "");

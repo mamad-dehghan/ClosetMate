@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  capsuleItems,
+  capsules,
   items,
   outfitItems,
   outfitPlans,
@@ -88,6 +90,85 @@ const SAMPLE_OUTFITS = [
     pieces: ["Forest midi dress", "Chestnut chelsea boots", "Canvas tote"],
   },
 ];
+
+const SAMPLE_CAPSULES = [
+  {
+    name: "Everyday ten",
+    season: "autumn",
+    occasion: "casual",
+    pieces: [
+      "Ivory cotton tee",
+      "Striped linen shirt",
+      "Charcoal merino sweater",
+      "Straight-leg jeans",
+      "Sand chinos",
+      "Black tailored trousers",
+      "Camel wool coat",
+      "White leather sneakers",
+      "Chestnut chelsea boots",
+      "Canvas tote",
+    ],
+  },
+  {
+    name: "Warm weekend",
+    season: "summer",
+    occasion: "casual",
+    pieces: [
+      "Striped linen shirt",
+      "Straight-leg jeans",
+      "Forest midi dress",
+      "White leather sneakers",
+      "Canvas tote",
+    ],
+  },
+];
+
+export async function seedCapsules(userId: string) {
+  const existing = await db.query.capsules.findFirst({
+    where: eq(capsules.userId, userId),
+    columns: { id: true },
+  });
+  if (existing) return 0;
+
+  const wardrobe = await db
+    .select({ id: items.id, name: items.name })
+    .from(items)
+    .where(eq(items.userId, userId));
+  const byName = new Map(wardrobe.map((item) => [item.name, item.id]));
+
+  let created = 0;
+
+  for (const definition of SAMPLE_CAPSULES) {
+    const ids = definition.pieces
+      .map((name) => byName.get(name))
+      .filter((id): id is string => Boolean(id));
+    if (ids.length === 0) continue;
+
+    const [capsule] = await db
+      .insert(capsules)
+      .values({
+        userId,
+        name: definition.name,
+        season: definition.season,
+        occasion: definition.occasion,
+      })
+      .returning({ id: capsules.id });
+
+    if (!capsule) continue;
+
+    await db.insert(capsuleItems).values(
+      ids.map((itemId, position) => ({
+        capsuleId: capsule.id,
+        itemId,
+        position,
+      })),
+    );
+
+    created += 1;
+  }
+
+  return created;
+}
 
 /**
  * Seeds four outfits plus a little history so the demo shows the outfit

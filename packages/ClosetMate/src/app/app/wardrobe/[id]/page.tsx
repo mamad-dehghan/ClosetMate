@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowLeft, Archive, ArchiveRestore, Pencil, Sparkles, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { DeleteItemButton } from "@/components/wardrobe/delete-item-button";
 import { GarmentImage } from "@/components/wardrobe/garment-image";
+import { toggleItemArchiveAction } from "@/lib/actions/items";
 import { getItem, listItems } from "@/db/queries/items";
 import { itemWearStats } from "@/db/queries/outfits";
 import { requireActor } from "@/lib/actor";
@@ -94,6 +95,20 @@ export default async function ItemDetailPage({
             <Pencil className="size-4" />
             Edit
           </Link>
+          <form action={toggleItemArchiveAction}>
+            <input type="hidden" name="id" value={item.id} />
+            <button
+              type="submit"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              {item.archivedAt ? (
+                <ArchiveRestore className="size-4" />
+              ) : (
+                <Archive className="size-4" />
+              )}
+              {item.archivedAt ? "Restore" : "Archive"}
+            </button>
+          </form>
           <DeleteItemButton id={item.id} name={item.name} />
         </div>
       </div>
@@ -103,6 +118,13 @@ export default async function ItemDetailPage({
           {query.created === "1"
             ? "Added to your wardrobe."
             : "Changes saved."}
+        </p>
+      ) : null}
+
+      {item.archivedAt ? (
+        <p className="rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-muted">
+          This piece is archived. It is hidden from suggestions, insights and
+          outfit builders, but stays in outfits that already use it.
         </p>
       ) : null}
 
@@ -120,6 +142,9 @@ export default async function ItemDetailPage({
             <div className="flex flex-wrap gap-1.5">
               <Badge tone="neutral">{meta.singular}</Badge>
               {item.favorite ? <Badge tone="accent">Favourite</Badge> : null}
+              {item.archivedAt ? (
+                <Badge tone="outline">Archived</Badge>
+              ) : null}
               {item.laundryStatus !== "available" ? (
                 <Badge tone="warning">{laundry?.label}</Badge>
               ) : null}

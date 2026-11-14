@@ -51,9 +51,15 @@ export function WardrobeFilters({
   }, [query]);
 
   const activeCategory = params.get("category") ?? "";
-  const hasFilters = ["q", "category", "season", "occasion", "favorite", "worn"].some(
-    (key) => params.get(key),
-  );
+  const hasFilters = [
+    "q",
+    "category",
+    "season",
+    "occasion",
+    "favorite",
+    "worn",
+    "archived",
+  ].some((key) => params.get(key));
 
   return (
     <div className="space-y-3">
@@ -169,6 +175,20 @@ export function WardrobeFilters({
           )}
         >
           Not worn in 30 days
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            update("archived", params.get("archived") === "1" ? "" : "1")
+          }
+          className={cn(
+            "min-h-9 rounded-pill border px-3.5 text-xs transition-colors",
+            params.get("archived") === "1"
+              ? "border-ink bg-ink text-canvas"
+              : "border-line bg-surface text-muted hover:text-ink",
+          )}
+        >
+          Archived
         </button>
         {hasFilters ? (
           <button

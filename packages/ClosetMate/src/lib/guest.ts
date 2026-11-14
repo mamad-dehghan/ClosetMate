@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { items, outfits, tags, users } from "@/db/schema";
-import { ensurePreferences, seedOutfits, seedWardrobe } from "./seed";
+import { ensurePreferences, seedCapsules, seedOutfits, seedWardrobe } from "./seed";
 
 export const GUEST_COOKIE = "cm_guest";
 const MAX_AGE = 60 * 60 * 24 * 30;
@@ -53,6 +53,7 @@ export async function createGuestUser() {
   await ensurePreferences(user.id);
   await seedWardrobe(user.id);
   await seedOutfits(user.id);
+  await seedCapsules(user.id);
 
   return user;
 }

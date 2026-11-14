@@ -100,6 +100,21 @@ export function daysAgoISO(days: number, now = new Date()) {
   return isoDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
 
+/** Monday-based week bounds for the week containing `now`. */
+export function weekBounds(now = new Date()) {
+  const date = new Date(now);
+  const offset = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - offset);
+
+  const from = isoDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+
+  const end = new Date(date);
+  end.setDate(end.getDate() + 6);
+  const to = isoDate(end.getFullYear(), end.getMonth() + 1, end.getDate());
+
+  return { from, to };
+}
+
 export function formatShortDate(iso: string) {
   const [year, month, day] = iso.split("-").map(Number);
   if (!year || !month || !day) return iso;
