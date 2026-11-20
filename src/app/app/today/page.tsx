@@ -16,6 +16,7 @@ import {
 import { eq } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { FillSamplesButton } from "@/components/wardrobe/fill-samples-button";
 import { GarmentImage } from "@/components/wardrobe/garment-image";
 import { ItemCard } from "@/components/wardrobe/item-card";
 import { db } from "@/db/client";
@@ -84,7 +85,7 @@ export default async function TodayPage() {
         <h1 className="mt-2 font-display text-3xl sm:text-4xl">Today</h1>
         <p className="mt-1 text-sm text-muted">
           {total === 0
-            ? "Your wardrobe is empty — add a few pieces to get started."
+            ? "Your wardrobe is empty — add a few pieces or start with the samples."
             : `You can build about ${capacity} complete outfit${capacity === 1 ? "" : "s"} right now.`}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -224,13 +225,16 @@ export default async function TodayPage() {
             Add a top, a bottom and a pair of shoes. That is enough for a
             suggestion.
           </p>
-          <Link
-            href="/app/wardrobe/new"
-            className={`${buttonVariants({ size: "md" })} mt-5`}
-          >
-            <Plus className="size-4" />
-            Add clothing
-          </Link>
+          <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
+            <Link
+              href="/app/wardrobe/new"
+              className={buttonVariants({ size: "md" })}
+            >
+              <Plus className="size-4" />
+              Add clothing
+            </Link>
+            <FillSamplesButton />
+          </div>
         </section>
       ) : (
         <section className="rounded-card border border-dashed border-line bg-surface/60 px-5 py-10 text-center">

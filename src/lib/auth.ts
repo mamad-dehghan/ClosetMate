@@ -5,6 +5,12 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db/client";
 import { ensurePreferences } from "./seed";
+import {
+  isValidEmail,
+  isValidPassword,
+  normalizeEmail,
+} from "./auth-utils";
+import { DUMMY_PASSWORD_HASH, verifyPassword } from "./password";
 
 const devLoginEnabled =
   process.env.ALLOW_DEV_LOGIN === "1" || process.env.NODE_ENV !== "production";
@@ -16,9 +22,49 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      // Google verifies the address before issuing the account, so a user
+      // who signed up with an email and password can safely use Google later.
+      allowDangerousEmailAccountLinking: true,
     }),
   );
 }
+
+providers.push(
+  Credentials({
+    id: "password",
+    name: "Email and password",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    authorize: async (credentials) => {
+      const email = normalizeEmail(credentials?.email);
+      const password = String(credentials?.password ?? "");
+
+      if (!isValidEmail(email) || !isValidPassword(password)) return null;
+
+      const existing = await db.query.users.findFirst({
+        where: eq(schema.users.email, email),
+      });
+
+      // Always run the hash comparison so the response time does not reveal
+      // whether the email exists or has a password attached.
+      const passwordMatches = await verifyPassword(
+        password,
+        existing?.passwordHash ?? DUMMY_PASSWORD_HASH,
+      );
+
+      if (!existing?.passwordHash || !passwordMatches) return null;
+
+      return {
+        id: existing.id,
+        email: existing.email,
+        name: existing.name,
+        image: existing.image,
+      };
+    },
+  }),
+);
 
 if (devLoginEnabled) {
   providers.push(
@@ -29,17 +75,14 @@ if (devLoginEnabled) {
         email: { label: "Email", type: "email" },
       },
       authorize: async (credentials) => {
-        const email = String(credentials?.email ?? "")
-          .trim()
-          .toLowerCase();
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return null;
+        const email = normalizeEmail(credentials?.email);
+        if (!isValidEmail(email)) return null;
 
         const existing = await db.query.users.findFirst({
           where: eq(schema.users.email, email),
         });
 
         if (existing) {
-          await ensurePreferences(existing.id);
           return {
             id: existing.id,
             email: existing.email,
@@ -58,7 +101,6 @@ if (devLoginEnabled) {
           .returning();
 
         if (!created) return null;
-        await ensurePreferences(created.id);
 
         return {
           id: created.id,
@@ -85,8 +127,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       ? undefined
       : "closetmate-dev-secret-change-me"),
   trustHost: true,
-  pages: { signIn: "/login" },
+  pages: { signIn: "/login", error: "/login" },
   providers,
+  events: {
+    async createUser({ user }) {
+      if (!user.id) return;
+      try {
+        if (user.email && !user.name?.trim()) {
+          await db
+            .update(schema.users)
+            .set({ name: user.email.split("@")[0] ?? "Friend" })
+            .where(eq(schema.users.id, user.id));
+        }
+        await ensurePreferences(user.id);
+      } catch (error) {
+        // Account setup is nice-to-have; never block a valid sign-in on it.
+        console.error("[closetmate] could not finish new user setup", error);
+      }
+    },
+    async signIn({ user }) {
+      if (!user.id) return;
+      try {
+        await ensurePreferences(user.id);
+      } catch (error) {
+        console.error("[closetmate] could not ensure preferences", error);
+      }
+    },
+  },
   callbacks: {
     jwt({ token, user }) {
       if (user?.id) token.id = user.id;

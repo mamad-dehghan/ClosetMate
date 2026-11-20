@@ -45,7 +45,7 @@ export default async function ProfilePage() {
           </span>
           <div className="min-w-0">
             <p className="truncate text-base font-medium">
-              {user?.name?.trim() || "Guest"}
+              {user?.name?.trim() || user?.email?.split("@")[0] || "Guest"}
             </p>
             <p className="truncate text-sm text-muted">
               {user?.email ?? "No email — this is an anonymous closet"}

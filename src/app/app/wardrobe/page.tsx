@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, Shirt } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { FillSamplesButton } from "@/components/wardrobe/fill-samples-button";
 import { ItemCard } from "@/components/wardrobe/item-card";
 import { WardrobeFilters } from "@/components/wardrobe/wardrobe-filters";
 import { countItems, listItems } from "@/db/queries/items";
@@ -101,13 +102,16 @@ export default async function WardrobePage({
             A top, a bottom and shoes are enough for ClosetMate to start
             suggesting combinations.
           </p>
-          <Link
-            href="/app/wardrobe/new"
-            className={`${buttonVariants({ size: "md" })} mt-6`}
-          >
-            <Plus className="size-4" />
-            Add your first piece
-          </Link>
+          <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row">
+            <Link
+              href="/app/wardrobe/new"
+              className={buttonVariants({ size: "md" })}
+            >
+              <Plus className="size-4" />
+              Add your first piece
+            </Link>
+            <FillSamplesButton />
+          </div>
         </div>
       ) : (
         <>

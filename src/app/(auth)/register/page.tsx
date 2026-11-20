@@ -1,14 +1,24 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { AuthForm } from "@/components/auth/auth-form";
+import {
+  GUEST_COOKIE,
+  isGuestUser,
+  verifyGuestToken,
+} from "@/lib/guest";
 
 export const metadata = { title: "Create account" };
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
   const googleEnabled = Boolean(
     process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
   );
   const devEnabled =
     process.env.ALLOW_DEV_LOGIN === "1" || process.env.NODE_ENV !== "production";
+
+  const store = await cookies();
+  const guestId = verifyGuestToken(store.get(GUEST_COOKIE)?.value);
+  const hasGuestWardrobe = guestId ? await isGuestUser(guestId) : false;
 
   return (
     <div className="w-full max-w-md">
@@ -18,14 +28,15 @@ export default function RegisterPage() {
         </p>
         <h1 className="mt-2 font-display text-3xl">Create your closet</h1>
         <p className="mt-2 text-sm text-muted">
-          No questionnaire. You will start with twelve sample pieces and can
-          replace them at your own pace.
+          No questionnaire. Start with twelve sample pieces or add your own at
+          your own pace.
         </p>
         <div className="mt-6">
           <AuthForm
             googleEnabled={googleEnabled}
             devEnabled={devEnabled}
             mode="register"
+            hasGuestWardrobe={hasGuestWardrobe}
           />
         </div>
       </div>
