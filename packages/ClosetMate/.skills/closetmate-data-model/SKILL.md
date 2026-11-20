@@ -12,7 +12,7 @@ Migrations: `drizzle/` · config: `drizzle.config.ts` (postgresql dialect, snake
 
 | Table | Purpose |
 | --- | --- |
-| `users` | Auth.js users plus `isAnonymous` / `claimedAt` for guest closets |
+| `users` | Auth.js users plus `password_hash` and `isAnonymous` / `claimedAt` for guest closets |
 | `accounts`, `sessions`, `verification_tokens` | Auth.js adapter tables (JWT sessions in practice) |
 | `preferences` | currency, units, theme, onboarding timestamp, optional weather coordinates |
 | `items` | the wardrobe: category, image, primary colour, seasons[], occasions[], price, laundry status |
@@ -43,10 +43,12 @@ cookie's HMAC with `AUTH_SECRET` before trusting it.
 1. `/api/guest` creates a `users` row with `isAnonymous = true`, seeds 12 sample items,
    sets `cm_guest = "<userId>.<hmac>"`.
 2. The guest can add, edit, delete and favourite for real.
-3. When they sign in, `GuestClaim` (mounted in the app layout) calls
+3. Registering with email/password claims the guest closet inside `registerWithPassword`
+   before the first render, then deletes the guest cookie.
+4. For Google and existing-account sign-ins, `GuestClaim` (mounted in the app layout) calls
    `claimGuestWardrobeAction`, which moves `items`, `tags` and `outfits` to the real
    user inside a transaction and deletes the guest row.
-4. `claimGuestWardrobe` is idempotent: it returns early if the guest row is gone or not
+5. `claimGuestWardrobe` is idempotent: it returns early if the guest row is gone or not
    anonymous.
 
 If you add a new table with `user_id`, **add it to the transaction in

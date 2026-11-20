@@ -26,7 +26,8 @@ Quick facts:
 - Package manager and runtime for scripts/tests: **Bun**.
 - Local database: PGlite at `.data/pglite` (`DATABASE_URL=` empty). No Docker.
 - Migrations: `bun run db:generate` then `bun run db:migrate`. Never hand-edit SQL.
-- Auth: Google OAuth when configured, plus a dev email login outside production.
+- Auth: Google OAuth when configured, email + password accounts, plus a dev email login
+  outside production. Passwords are scrypt-hashed in `users.password_hash`.
 - Guest closets are real rows with `isAnonymous = true`, moved onto the account on
   sign-in. Any new user-owned table must join that transaction.
 - Every query is actor-scoped through `src/lib/actor.ts`.

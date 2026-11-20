@@ -41,6 +41,19 @@ With `DATABASE_URL` empty the app uses PGlite (embedded Postgres, no Docker). Se
 `postgres://` URL switches to a real server with no code changes. Both `db:migrate` and the
 app use the same detection logic.
 
+## Accounts and passwords
+
+- Email/password accounts are stored as salted scrypt hashes in `users.password_hash`.
+  Use `hashPassword` / `verifyPassword` from `src/lib/password.ts`; never compare plaintext.
+- Registration can seed the twelve `SAMPLE_ITEMS`. Empty closets also show a
+  `FillSamplesButton` that calls `fillSampleWardrobeAction`; it is a no-op unless the
+  closet has no items at all (archived items count).
+- There is no email verification or password reset flow yet. Email is only the sign-in
+  identifier.
+- Google and dev-login accounts have no password hash and keep using their original method.
+- Registering from a guest closet claims the guest wardrobe before the first render;
+  Google and existing-account sign-ins still use the client `GuestClaim`.
+
 ## First run after a fresh clone
 
 ```bash
@@ -125,6 +138,11 @@ cookie, and sends the visitor back. Real validation and DB lookups happen in
 - `next dev` regenerates `AGENTS.md` with Next version notes. Leave it in the tree.
 - The dev credentials provider exists only outside production or with
   `ALLOW_DEV_LOGIN=1`. Never enable it on a public deployment.
+- The seeded `demo@closetmate.app` account has no password; use the Development sign-in
+  shortcut rather than the email/password form.
+- Registration uses the `password` credentials provider. Auth.js logs a
+  `CredentialsSignin` error for wrong passwords; the server action converts it to the
+  friendly "Incorrect email or password" state.
 - Turpopack prints a warning about dynamic `path` usage in `src/db/client.ts`; it is
   non-fatal. Keep filesystem paths statically scoped (`path.join(process.cwd(), ".data", ...)`).
 - Google sign-in is hidden when `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` are unset; the app

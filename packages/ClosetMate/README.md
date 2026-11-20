@@ -16,7 +16,7 @@ This is the first vertical slice. It runs end to end today.
 | --- | --- |
 | Marketing landing page + sample closet | Working |
 | Guest mode (anonymous wardrobe, no signup) | Working |
-| Auth (Google OAuth + local dev login) | Working |
+| Auth (Google OAuth + email/password + local dev login) | Working |
 | Guest → account wardrobe hand-off | Working |
 | Wardrobe list, search, filters, favourites | Working |
 | Quick add with photo upload, compression, auto color detection | Working |
@@ -44,7 +44,7 @@ See [PLAN.md](./PLAN.md) for the full shipped / next breakdown.
 - **Drizzle ORM** + PostgreSQL
 - **PGlite** for local development (embedded Postgres, no Docker)
 - **Neon** for production
-- **Auth.js v5** (Google + dev credentials), JWT sessions
+- **Auth.js v5** (Google, email/password + dev credentials), JWT sessions
 - **Vercel Blob** for production images, local disk in development
 - **Open-Meteo** for weather (keyless, cached server-side)
 - **Bun** for install, scripts, and tests (no Node-specific tooling)
@@ -84,14 +84,28 @@ Open http://localhost:3000.
 **Ways in**
 
 - `/demo` → creates a guest wardrobe immediately, no account.
-- `/login` → the dev email login, or Google when configured.
+- `/register` → create an account with an email and password, optionally with twelve sample pieces.
+- `/login` → email and password, or Google when configured.
+- Empty closets can be filled with the twelve sample pieces from the wardrobe or today page.
 - Seeded demo account: `demo@closetmate.app` via the dev login.
+
+### Email and password, step by step
+
+1. `bun run dev` (from `packages/ClosetMate`).
+2. Open <http://localhost:3000/register>.
+3. Enter a name (optional), email and a password of at least eight characters.
+4. Leave **Start with 12 sample pieces** checked, or clear it for an empty closet.
+5. Press **Create account**. You land on `/app/today` already signed in.
+
+If you start empty, the wardrobe and today pages offer **Fill with 12 sample pieces**. The action only runs when the closet has no items, so it is safe to click more than once.
+
+Passwords are salted and hashed with scrypt (`src/lib/password.ts`); the plain password is never stored. There is **no email verification or password reset flow yet** — email is the sign-in identifier, not a delivery channel.
 
 ### Dev sign-in, step by step
 
 1. `bun run dev` (from `packages/ClosetMate`).
-2. Open <http://localhost:3000/login> or <http://localhost:3000/register>.
-3. Type any email — `demo@closetmate.app` is the seeded one — and press **Sign in**.
+2. Open <http://localhost:3000/login>.
+3. Expand **Development sign-in** and type any email — `demo@closetmate.app` is the seeded one — then press **Sign in without a password**.
 4. You land on `/app/today`.
 
 There is no password and no email is sent. The `dev` credentials provider:
@@ -121,6 +135,12 @@ Always stop the dev server with Ctrl+C rather than killing the process tree.
 Migrations have not been applied to the database the server is using. Run
 `bun run db:migrate` from `packages/ClosetMate` (the path is relative to the working
 directory, so start both from the package folder).
+
+**“Incorrect email or password” for the demo account**
+
+The seeded `demo@closetmate.app` account has no password. Use **Development sign-in**, or
+register a new email/password account. Google-created accounts also have no password —
+continue with Google for those.
 
 **Hydration warning mentioning `data-darkreader-*`**
 
@@ -162,6 +182,8 @@ extension, or test in a private window.
 | `STORAGE_DRIVER` | No | `local` (default) or `blob` |
 | `BLOB_READ_WRITE_TOKEN` | With `blob` | Vercel Blob token |
 
+Email/password accounts need no extra environment variables. The password hash is stored in `users.password_hash`, added by `bun run db:migrate`.
+
 Switching to Neon is a one-line change: set `DATABASE_URL`, run `bun run db:migrate`. Nothing else in the code depends on the driver.
 
 ---
@@ -190,6 +212,8 @@ src/
 │  ├─ color.ts              colour-wheel math (no AI)
 │  ├─ versatility.ts        combination counting
 │  ├─ suggest.ts            deterministic daily outfit pick
+│  ├─ password.ts           scrypt password hashing
+│  ├─ auth-utils.ts         email/password validation
 │  ├─ guest.ts              signed guest cookie + wardrobe claiming
 │  ├─ actor.ts              single source of ownership checks
 │  ├─ storage.ts            local / Vercel Blob adapter
@@ -211,6 +235,8 @@ Layouts are written smallest-screen-first: a bottom tab bar and floating add but
 2. Provision Neon and set `DATABASE_URL`.
 3. Set `AUTH_SECRET`, Google OAuth keys, and (optionally) `STORAGE_DRIVER=blob` with `BLOB_READ_WRITE_TOKEN`.
 4. Add the deployed URL to the Google OAuth redirect list: `https://<domain>/api/auth/callback/google`.
-5. Deploy, then run `bun run db:migrate` against the production database once.
+5. Deploy, then run `bun run db:migrate` against the production database once. The migration adds `users.password_hash`; existing Google and dev accounts keep working without one.
+
+Never set `ALLOW_DEV_LOGIN=1` on a public deployment — the dev provider accepts any email without a password.
 
 Build command is the default (`bun run build`), output is handled by the Next.js adapter.

@@ -1,6 +1,6 @@
 # ClosetMate — implementation plan & status
 
-Last updated: 13 November 2026
+Last updated: 20 November 2026
 
 This file tracks **what exists**, **what is next**, and **why decisions were made**. Keep it current when a pass ships.
 
@@ -33,15 +33,18 @@ from the same wardrobe, and gets told what is missing and what each piece costs 
 - [x] Responsive site header/footer, mobile-first layout
 
 **Identity**
-- [x] Auth.js v5 with Google OAuth (conditional) and dev email login
+- [x] Auth.js v5 with Google OAuth (conditional), email + password, and dev email login
+- [x] Scrypt password hashes (`users.password_hash`); no plaintext passwords
 - [x] JWT sessions with user id in the session
 - [x] Guest mode: signed `cm_guest` cookie, anonymous `users` row, 12 seeded pieces
 - [x] Guest wardrobe claimed into the account on first real sign-in (transactional)
+- [x] Registration claims a guest wardrobe before the first render
 - [x] `/app/*` bootstrap via Next 16 `proxy.ts` when no session cookie exists
 
 **Wardrobe**
 - [x] Grid with category counts, search, season/occasion/favourite filters, sort
 - [x] Quick add: photo (camera/gallery), client-side resize to 1600px WebP, upload, dominant-colour extraction, name fallback
+- [x] One-click fill with the 12 predefined sample pieces when the closet is empty
 - [x] Optional details: brand, pattern, subcategory, price, care status, favourites, notes
 - [x] Item detail: image, metadata, delete, edit
 - [x] Edit form with the same component as create
@@ -168,6 +171,9 @@ These all reuse the existing item/outfit data. None require generative AI.
 | `src/app/app/*` | URL segment `/app` for the product, route groups for public/auth sections. |
 | Plain `<img>` for garment images | Uploaded files are served through a route handler; the optimizer adds no value and complicates self-hosting. |
 | Local storage adapter mirrors Blob | Development needs no cloud account; production switches with one env var. |
+| Email + password over magic links | No external email provider or sending domain is required to launch; Auth.js credentials + JWT keeps the flow self-contained. Email verification and password reset are deferred. |
+| scrypt for password hashes | Built into Node/Bun, no native dependency, and portable to the Vercel Node runtime. Salt and hash are stored in one `password_hash` string. |
+| Synchronous guest claim on registration | Registration already knows the new user id, so claiming before the first render avoids a flash of an empty wardrobe. The client `GuestClaim` remains for Google and existing-account sign-ins. |
 
 ---
 
@@ -176,6 +182,11 @@ These all reuse the existing item/outfit data. None require generative AI.
 **Limitations**
 - ESLint is not wired up: the workspace root pins TypeScript 7, which `typescript-eslint`
   does not support yet. `tsc --noEmit` plus `bun test` are the quality gate for now.
+- Email addresses are not verified and there is no password reset flow yet. The email is
+  a sign-in identifier, not a delivery channel.
+- Existing Google and dev accounts have no password; they must keep using their original
+  sign-in method. An email/password account can use Google with the same address because
+  Google verifies the email before linking.
 - Uploads in local mode are process-local (`.data/uploads`); Vercel needs `STORAGE_DRIVER=blob`.
 - PGlite is single-writer; fine for local dev, not for deployment.
 - Theme preference is stored but the UI is light-only.
@@ -216,3 +227,5 @@ bun run dev
 ```
 
 Then walk the guest path: `/demo` → add an item → edit it → open `/app/today`. Sign in with the dev login and confirm the guest wardrobe moved across.
+
+For the email/password path: `/register` with samples checked → 12 pieces on `/today`; sign out → `/login` with the same credentials; register a second account with samples unchecked → use **Fill with 12 sample pieces** on the empty wardrobe and today pages; register from a guest closet and confirm the original pieces move without duplicating samples.
