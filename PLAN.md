@@ -218,7 +218,6 @@ These all reuse the existing item/outfit data. None require generative AI.
 ## 7. How to verify a pass
 
 ```bash
-cd packages/ClosetMate
 bun test
 bun run typecheck
 bun run build
