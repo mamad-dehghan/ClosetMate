@@ -55,7 +55,7 @@ No separate backend. Route handlers and server actions live in the same app, so 
 
 ## Quickstart
 
-From this repository root (`C:/Code/root/packages/ClosetMate`):
+From this repository root:
 
 ```bash
 bun install

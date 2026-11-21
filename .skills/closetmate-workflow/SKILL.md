@@ -5,7 +5,7 @@ description: Run, migrate, test and debug the standalone ClosetMate Next.js app
 
 # ClosetMate Workflow
 
-App repo root: `C:/Code/root/packages/ClosetMate` (standalone Bun project; install and run here).
+App repo root: this repository (standalone Bun project; install and run here).
 **Use Bun for everything** — install, scripts, tests. Do not add npm/node-specific tooling.
 
 ## Commands

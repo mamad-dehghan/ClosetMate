@@ -6,8 +6,7 @@ description: Index of project-specific ClosetMate skills for the standalone Next
 # ClosetMate (project skill index)
 
 ClosetMate is a personal wardrobe organizer and outfit assistant in this repository
-(`C:/Code/root/packages/ClosetMate` checkout; Next.js 16 App Router, Bun, Drizzle,
-PGlite/Neon, Auth.js, Tailwind v4).
+(Next.js 16 App Router, Bun, Drizzle, PGlite/Neon, Auth.js, Tailwind v4).
 
 The detailed project skills live under `.skills/` in this repository. Relative to this
 skill's directory (`.opencode/skills/closetmate/`):
