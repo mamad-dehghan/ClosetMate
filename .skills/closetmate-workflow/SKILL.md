@@ -1,20 +1,18 @@
 ---
 name: ClosetMate Workflow
-description: Run, migrate, test and debug the ClosetMate Next.js app inside the bun workspace
+description: Run, migrate, test and debug the standalone ClosetMate Next.js app
 ---
 
 # ClosetMate Workflow
 
-App: `C:/Code/root/packages/ClosetMate` (part of the bun workspace at `C:/Code/root`).
+App repo root: `C:/Code/root/packages/ClosetMate` (standalone Bun project; install and run here).
 **Use Bun for everything** — install, scripts, tests. Do not add npm/node-specific tooling.
 
 ## Commands
 
 ```bash
-# install (always from repo root)
+# all commands from this repository root
 bun install
-
-cd packages/ClosetMate
 bun run dev            # next dev via bun
 bun run build          # production build
 bun run typecheck      # tsc --noEmit
@@ -58,7 +56,6 @@ app use the same detection logic.
 
 ```bash
 bun install
-cd packages/ClosetMate
 cp .env.example .env.local
 bun run db:migrate
 bun run db:seed      # optional

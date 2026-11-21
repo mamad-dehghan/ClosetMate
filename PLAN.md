@@ -21,7 +21,7 @@ from the same wardrobe, and gets told what is missing and what each piece costs 
 ### Pass 1 checklist
 
 **Foundation**
-- [x] Next.js 16 App Router app inside the Bun workspace (`packages/ClosetMate`)
+- [x] Next.js 16 App Router app in this repository
 - [x] TypeScript strict, Tailwind v4 design tokens, Bun test runner
 - [x] Dual-driver database: PGlite locally, Postgres/Neon in production
 - [x] Drizzle schema + generated migration + migrate/seed scripts
@@ -180,7 +180,7 @@ These all reuse the existing item/outfit data. None require generative AI.
 ## 6. Known limitations / open questions
 
 **Limitations**
-- ESLint is not wired up: the workspace root pins TypeScript 7, which `typescript-eslint`
+- ESLint is not wired up: the project pins TypeScript 7, which `typescript-eslint`
   does not support yet. `tsc --noEmit` plus `bun test` are the quality gate for now.
 - Email addresses are not verified and there is no password reset flow yet. The email is
   a sign-in identifier, not a delivery channel.

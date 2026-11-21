@@ -55,16 +55,10 @@ No separate backend. Route handlers and server actions live in the same app, so 
 
 ## Quickstart
 
-From the repository root (`C:/Code/root`):
+From this repository root (`C:/Code/root/packages/ClosetMate`):
 
 ```bash
 bun install
-```
-
-Then:
-
-```bash
-cd packages/ClosetMate
 
 # 1. Local env (already includes a dev-only AUTH_SECRET)
 cp .env.example .env.local
@@ -91,7 +85,7 @@ Open http://localhost:3000.
 
 ### Email and password, step by step
 
-1. `bun run dev` (from `packages/ClosetMate`).
+1. `bun run dev` from this repository root.
 2. Open <http://localhost:3000/register>.
 3. Enter a name (optional), email and a password of at least eight characters.
 4. Leave **Start with 12 sample pieces** checked, or clear it for an empty closet.
@@ -103,7 +97,7 @@ Passwords are salted and hashed with scrypt (`src/lib/password.ts`); the plain p
 
 ### Dev sign-in, step by step
 
-1. `bun run dev` (from `packages/ClosetMate`).
+1. `bun run dev` from this repository root.
 2. Open <http://localhost:3000/login>.
 3. Expand **Development sign-in** and type any email — `demo@closetmate.app` is the seeded one — then press **Sign in without a password**.
 4. You land on `/app/today`.
@@ -133,8 +127,8 @@ Always stop the dev server with Ctrl+C rather than killing the process tree.
 **`relation "users" does not exist`**
 
 Migrations have not been applied to the database the server is using. Run
-`bun run db:migrate` from `packages/ClosetMate` (the path is relative to the working
-directory, so start both from the package folder).
+`bun run db:migrate` from this repository root (the path is relative to the working
+directory).
 
 **“Incorrect email or password” for the demo account**
 
@@ -231,7 +225,7 @@ Layouts are written smallest-screen-first: a bottom tab bar and floating add but
 
 ## Deployment (Vercel)
 
-1. Import the repo, set **Root Directory** to `packages/ClosetMate`.
+1. Import the repo and leave **Root Directory** at the repository root.
 2. Provision Neon and set `DATABASE_URL`.
 3. Set `AUTH_SECRET`, Google OAuth keys, and (optionally) `STORAGE_DRIVER=blob` with `BLOB_READ_WRITE_TOKEN`.
 4. Add the deployed URL to the Google OAuth redirect list: `https://<domain>/api/auth/callback/google`.
